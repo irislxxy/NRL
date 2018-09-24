@@ -2,7 +2,7 @@ library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
 ##replace blank/N/ N/A /none with NA
-df <- read.csv("HDIWear_DATA_2018-09-21.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2018-06-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 df[df == "N" | df == "N/A" | df == "none"] <- NA
 fields <- colnames(df)
 ##notes
@@ -192,12 +192,12 @@ for (i in 1:nrow(df_ipaq_pre)){
 
 res_ipaq_pre <- f_na(df_ipaq_pre)
 
-res_ipaq_pre <- add_column(res_ipaq_pre, rep(NA,nrow(res_ipaq_pre)), .after=1)
-colnames(res_ipaq_pre)[2] <- "hd_or_healthy"
-for (i in 1:nrow(res_ipaq_pre)){
-  res_ipaq_pre$hd_or_healthy[i]  <- df$hd_or_healthy[which(df$as_correct==res_ipaq_pre$record[i])]
-}
-write.csv(res_ipaq_pre, "missingvalue_ipaq_pre.csv", row.names=F)
+# res_ipaq_pre <- add_column(res_ipaq_pre, rep(NA,nrow(res_ipaq_pre)), .after=1)
+# colnames(res_ipaq_pre)[2] <- "hd_or_healthy"
+# for (i in 1:nrow(res_ipaq_pre)){
+#   res_ipaq_pre$hd_or_healthy[i]  <- df$hd_or_healthy[which(df$as_correct==res_ipaq_pre$record[i])]
+# }
+# write.csv(res_ipaq_pre, "missingvalue_ipaq_pre.csv", row.names=F)
 
 #LifeSpace for HD only (except germany) 
 ls_temp <- grep("^lifespace", fields)
@@ -281,12 +281,12 @@ for (i in 1:nrow(df_ipaq_post)){
 
 res_ipaq_post <- f_na(df_ipaq_post)
 
-res_ipaq_post <- add_column(res_ipaq_post, rep(NA,nrow(res_ipaq_post)), .after=1)
-colnames(res_ipaq_post)[2] <- "hd_or_healthy"
-for (i in 1:nrow(res_ipaq_post)){
-  res_ipaq_post$hd_or_healthy[i]  <- df$hd_or_healthy[which(df$as_correct==res_ipaq_post$record[i])]
-}
-write.csv(res_ipaq_post, "missingvalue_ipaq_post.csv", row.names=F)
+# res_ipaq_post <- add_column(res_ipaq_post, rep(NA,nrow(res_ipaq_post)), .after=1)
+# colnames(res_ipaq_post)[2] <- "hd_or_healthy"
+# for (i in 1:nrow(res_ipaq_post)){
+#   res_ipaq_post$hd_or_healthy[i]  <- df$hd_or_healthy[which(df$as_correct==res_ipaq_post$record[i])]
+# }
+# write.csv(res_ipaq_post, "missingvalue_ipaq_post.csv", row.names=F)
 
 #Telephone Interview POST for everyone
 phone_temp <- grep("^telephone_interview", fields)
@@ -354,7 +354,7 @@ df_HD_ae <- df_HD[,ae]
 
 res <- rbind(res_bi_1,res_bi_2,res_hfq,res_func,
              res_ipaq_pre,res_ipaq_post,res_ls,
-             res_sw,,
+             res_sw,
              res_hfq_post)
 res <- res[order(res$record),]
 write.csv(res,"missingvalue.csv", row.names=F)

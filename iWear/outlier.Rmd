@@ -1,0 +1,48 @@
+---
+title: "Outlier Analysis"
+output: pdf_document
+---
+
+```{r}
+setwd("/Users/iris/Desktop/NRL/iWear")
+df <- read.csv("iWear_0921.csv")
+fields <- colnames(df)
+```
+
+```{r}
+#select numeric columns
+df_class <- sapply(df, class)
+table(df_class)
+
+numList <- list()
+for (i in 1:222) {
+  if (is.integer(df[,i]) | is.numeric(df[,i])) {
+    numList <- c(numList,fields[i])
+  }
+}
+numList <- unlist(numList)
+```
+
+```{r}
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
+}
+
+for (i in numList){
+  #box-and-whisker plot
+  boxplot(df[,i], main=i)
+
+  #summary
+  cat(i, "summary: \n")
+  print(summary(df[,i]))
+  cat("\n")
+  
+  #identify outliers 
+  cat(i, "outliers: \n")
+  outlier <- ifelse(is_outlier(df[,i]), df[,i], as.numeric(NA))
+  names(outlier) <- df$as_correct
+  df_out <- as.data.frame(outlier)
+  df_out <- na.omit(df_out)
+  print(df_out)
+}
+```
