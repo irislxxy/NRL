@@ -22,7 +22,7 @@ EOL.Gait.Speed <- (df_apdm$EOL.Gait.Speed.L + df_apdm$EOL.Gait.Speed.R)/2
 df_apdm <- add_column(df_apdm, EOL.Gait.Speed, .after = "EOL.Gait.Speed.R")
 
 #REDCap
-df <- read.csv("HDIWear_DATA_2018-07-30.csv", stringsAsFactors=FALSE)
+df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE)
 fields <- colnames(df)
 
 #participants: TC, Wayne State and Germany
@@ -110,10 +110,10 @@ dte$motor_tug_dte <- -100 * (dte$TUG.with.Cognitive.Duration - dte$TUG.Duration)
 df_hd <- df[,c("as_correct","hd_or_healthy")]
 dte <- merge(df_hd, dte, all.x = T)
 dte <- na.omit(dte)
-write.csv(dte, "Dual Task/DTE.csv", row.names = F)
+write.csv(dte, "Dual Task/DTE_1022.csv", row.names = F)
 
-df_anova <- merge(df_hd, df_apdm[,c(1:7,11,15,19,20,21)], all.x = T)
-df_anova <- merge(df_anova, dte[,c(1,grep("crr",colnames(dte)))], all.x = T)
-which(is.na(df_anova), arr.ind=TRUE) #GH9/GH12/GH17/IW4TC/IW13TC
-#df_anova <- na.omit(df_anova)
-write.csv(df_anova, "Dual Task/ANOVA.csv", row.names = F)
+# df_anova <- merge(df_hd, df_apdm[,c(1:7,11,15,19,20,21)], all.x = T)
+# df_anova <- merge(df_anova, dte[,c(1,grep("crr",colnames(dte)))], all.x = T)
+# which(is.na(df_anova), arr.ind=TRUE) #GH9/GH12/GH17/IW4TC/IW13TC
+# df_anova <- na.omit(df_anova)
+# write.csv(df_anova, "Dual Task/ANOVA.csv", row.names = F)

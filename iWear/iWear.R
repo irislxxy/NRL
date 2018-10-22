@@ -3,7 +3,7 @@ setwd("/Users/iris/Desktop/NRL/iWear")
 
 #
 ##replace blank/N/ N/A /none with NA
-df <- read.csv("HDIWear_DATA_2018-09-21.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 df[df == "N" | df == "N/A" | df == "none"] <- NA
 fields <- colnames(df)
 ##repalce NA with blank in notes
@@ -167,7 +167,7 @@ df3 <- merge(df2, df_ipaq_pre)
 df3 <- merge(df3, df_ipaq_post)
 df3 <- merge(df3, df_ls)
 
-write.csv(df3, "iWear_0921.csv", row.names=F)
+write.csv(df3, "iWear_1022.csv", row.names=F)
 
 #function: return the record and field of each missing value
 f_na <- function(df){
@@ -185,4 +185,4 @@ f_na <- function(df){
   return(df_na)
 }
 res <- f_na(df3)
-write.csv(res, "missingvalue_0921.csv", row.names=F)
+write.csv(res, "missingvalue_1022.csv", row.names=F)
