@@ -95,13 +95,15 @@ dte <- add_column(dte, motor_fteofs_dte, .after="FTEOFirmStroop.Sway.Area")
 dte$motor_faeofoam_dte <- -100 * (dte$FAEOFoamStroop.Sway.Area - dte$FAEOFoam.Sway.Area)/dte$FAEOFoam.Sway.Area
 
 #motor-walking
-dte <- merge(dte, df_apdm[,c(1,11,15,19)], all.x = TRUE)
+dte <- merge(dte, df_apdm[,c(1,8,12,16)], all.x = TRUE)
 
 ##Walking While Talking (Alphabet)
-dte$motor_alphabet_dte <- 100 * (dte$Alphabet.Gait.Speed - dte$Walk.Gait.Speed)/dte$Walk.Gait.Speed
+# dte$motor_alphabet_dte <- 100 * (dte$Alphabet.Gait.Speed - dte$Walk.Gait.Speed)/dte$Walk.Gait.Speed
+dte$motor_alphabet_dte <- -100 * (dte$Alphabet.Duration - dte$Walk.Duration)/dte$Walk.Duration
 
 ##Walking While Talking (Every Other Letter)
-dte$motor_eol_dte <- 100 * (dte$EOL.Gait.Speed - dte$Walk.Gait.Speed)/dte$Walk.Gait.Speed
+# dte$motor_eol_dte <- 100 * (dte$EOL.Gait.Speed - dte$Walk.Gait.Speed)/dte$Walk.Gait.Speed
+dte$motor_eol_dte <- -100 * (dte$EOL.Duration - dte$Walk.Duration)/dte$Walk.Duration
 
 #motor-TUG
 dte <- merge(dte, df_apdm[,c(1,20,21)], all.x = T)
@@ -109,8 +111,9 @@ dte$motor_tug_dte <- -100 * (dte$TUG.with.Cognitive.Duration - dte$TUG.Duration)
 
 df_hd <- df[,c("as_correct","hd_or_healthy")]
 dte <- merge(df_hd, dte, all.x = T)
-dte <- na.omit(dte)
-write.csv(dte, "Dual Task/DTE_1022.csv", row.names = F)
+which(is.na(dte), arr.ind=TRUE) #IW13TC/IW4TC as_eol_time
+# dte <- na.omit(dte)
+write.csv(dte, "Dual Task/DTE_1028.csv", row.names = F)
 
 # df_anova <- merge(df_hd, df_apdm[,c(1:7,11,15,19,20,21)], all.x = T)
 # df_anova <- merge(df_anova, dte[,c(1,grep("crr",colnames(dte)))], all.x = T)
