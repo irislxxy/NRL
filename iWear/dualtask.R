@@ -58,9 +58,9 @@ dte$faeofoam_dte <- 100 * (dte$faeofoam_crr - dte$it_crr)/dte$it_crr
 as <- grep("as", fields)[c(1,24:29)]
 df_as <- df[,as]
 dte <- merge(dte, df_as)
-as_crr <- (dte$as_correct1 - dte$as_errors)/dte$as_time
+as_crr <- dte$as_correct1/dte$as_time
 dte <- add_column(dte, as_crr, .after="as_errors")
-dte$as_eol_crr <- (as.numeric(dte$as_eol_correct) - dte$as_eol_errors)/dte$as_eol_time
+dte$as_eol_crr <- as.numeric(dte$as_eol_correct)/dte$as_eol_time
 
 #dual task: walking while talking
 wwt <- grep("wwt", fields)
@@ -70,14 +70,14 @@ dte <- merge(dte, df_wwt)
 ##Walking While Talking (Alphabet)
 wwt_time <- df_apdm$Alphabet.Duration[match(dte$as_correct,df_apdm$as_correct)]
 dte <- add_column(dte, wwt_time, .after="wwt_errors")
-wwt_crr <- (dte$wwt_correct - dte$wwt_errors)/dte$wwt_time
+wwt_crr <- dte$wwt_correct/dte$wwt_time
 dte <- add_column(dte, wwt_crr, .after="wwt_time")
 wwt_dte <- 100 * (dte$wwt_crr - dte$as_crr)/dte$as_crr
 dte <- add_column(dte, wwt_dte, .after="wwt_crr")
 
 ##Walking While Talking (Every Other Letter)
 dte$wwt_eol_time <- df_apdm$EOL.Duration[match(dte$as_correct,df_apdm$as_correct)]
-dte$wwt_eol_crr <- (dte$wwt_eol_correct - dte$wwt_eol_errors)/dte$wwt_eol_time
+dte$wwt_eol_crr <- dte$wwt_eol_correct/dte$wwt_eol_time
 dte$wwt_eol_dte <- 100 * (dte$wwt_eol_crr - dte$as_eol_crr)/dte$as_eol_crr
 
 #motor-standing
