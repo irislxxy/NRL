@@ -164,10 +164,17 @@ df2 <- add_column(df2, TFC, .after = 5)
 df2 <- add_column(df2, FA, .after = 6)
 
 df3 <- merge(df2, df_ipaq_pre)
-df3 <- merge(df3, df_ipaq_post)
 df3 <- merge(df3, df_ls)
+df3 <- merge(df3, df_ipaq_post)
 
-write.csv(df3, "iWear_1022.csv", row.names=F)
+#delete complete columns
+complete <- grep("complete", colnames(df3))
+df3 <- df3[,-complete]
+
+#delete identifiable information
+df3 <- df3[,-4]
+
+write.csv(df3, "iWear_1113.csv", row.names=F)
 
 #function: return the record and field of each missing value
 f_na <- function(df){
