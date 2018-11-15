@@ -66,17 +66,17 @@ df$hfq_4_specify[hfq_4_specify_idx] <- ""
 hfq_6_no_idx <- which(df$hfq_6==0)
 hfq_6_field_idx <- grep("hfq_6",fields)
 hfq_6_field <- fields[hfq_6_field_idx][-1]
-dfhfq[hfq_6_no_idx,hfq_6_field] <- ""
+df[hfq_6_no_idx,hfq_6_field] <- ""
 hfq_6_specify_idx <- which(df$hfq_6_specify___14==0)
 df$hfq_6_otherspecify[hfq_6_specify_idx] <- ""
 
 ##7. Have you changed anything to prevent reoccurrence?
-hfq_7_specify_idx <- which(df_HD_hfq$hfq_7==0)
-df_HD_hfq$hfq_7_specify[hfq_7_specify_idx] <- ""
+hfq_7_specify_idx <- which(df$hfq_7==0)
+df$hfq_7_specify[hfq_7_specify_idx] <- ""
 
 ##13. Have you completely recovered to the point that you feel like yourself again?
 hfq_13_no_idx <- which(df$hfq_13==0)
-df_$hfq_13_yes[hfq_13_no_idx] <- ""
+df$hfq_13_yes[hfq_13_no_idx] <- ""
 
 ##15A. For your most serious injury, what type of injury did you suffer? 
 hfq_15a_specify_idx <- which(df$hfq_15a!=6)
@@ -88,7 +88,7 @@ df$hfq_15b_specify[hfq_15b_specify_idx] <- ""
 
 ##17A. For your second most serious injury, what type of injury did you suffer?
 hfq_17a_specify_idx <- which(df$hfq_17a!=6)
-df$hfq_17a_specify[hfq_17a_specify_idx] <- ""
+df$hfb_17a_specify[hfq_17a_specify_idx] <- ""
 
 ##17B. What was the location of your second most serious injury?
 hfq_17b_specify_idx <- which(df$hfq_17a!=23)
@@ -141,7 +141,7 @@ for (i in 1:nrow(df_ipaq_pre)){
 }
 
 ##replace df with df_ipaq_pre
-df[,ipaq_pre] <- df_ipaq_pre[-1]
+df[,ipaq_pre_idx] <- df_ipaq_pre[-1]
 
 # LifeSpace for HD only (except germany) 
 ls_temp <- grep("^lifespace", fields)
@@ -179,19 +179,19 @@ df[,ls_idx] <- df_ls[-1]
 motor <- fields[251:282]
 df_motor <- df[motor]
 df_motor[df_motor >= 98] <- NA
-TMS <- rowSums(df_motor, na.rm=TRUE)
+TMS <- rowSums(df_motor)
 
 ##uhdrs
 uhdrs <- fields[283:287]
 df_uhdrs <- df[uhdrs]
 df_uhdrs[df_uhdrs >= 98] <- NA
-TFC <- rowSums(df_uhdrs, na.rm=TRUE)
+TFC <- rowSums(df_uhdrs)
 
 ##func
 func <- fields[289:313]
 df_func <- df[func]
 df_func[df_func >= 98] <- NA
-FA <- rowSums(df_func, na.rm=TRUE)
+FA <- rowSums(df_func)
 
 # IPAQ Short Last 7 Days Telephone POST for everyone
 ipaq_post_temp <- grep("^ipaq_short_last_7_days_telephone_post", fields)
@@ -235,7 +235,7 @@ for (i in 1:nrow(df_ipaq_post)){
 }
 
 ##replace df with df_ipaq_post
-df[,ipaq_post] <- df_ipaq_post[-1]
+df[,ipaq_post_idx] <- df_ipaq_post[-1]
 
 # Telephone Interview POST for everyone
 ##5
@@ -258,23 +258,28 @@ df$phone_13[is.na(df$phone_13)] <- ""
 hfq_post_temp <- grep("^history_of_falls_questionnaire_post", fields)
 hfq_post_idx <- seq(hfq_post_temp[1]+1, hfq_post_temp[2]-1)
 df[df$hd_or_healthy==2,hfq_post_idx] <- ""
+hfq_post <- c("as_correct", fields[hfq_post_idx])
+df_hfq_post <- df[,hfq_post]
 
-##2. Have you fallen in the past week?
+##2
 ##If hfq_2_post=0, ingore the following fields.
-hfq_2_post_idx <- which(df$hfq_2_post==0 | is.na(df$hfq_2_post))
-df[hfq_2_post_idx,c(3:63)] <- "" 
+hfq_2_post_idx <- which(df_hfq_post$hfq_2_post==0 | is.na(df_hfq_post$hfq_2_post))
+df_hfq_post[hfq_2_post_idx,c(3:63)] <- "" 
 
 ##hfq_7_changed_post
-hfq_7_post_idx <- which(df$hfq_7_post==0)
-df$hfq_7_changed_post[hfq_7_post_idx] <- "" 
+hfq_7_post_idx <- which(df_hfq_post$hfq_7_post==0)
+df_hfq_post$hfq_7_changed_post[hfq_7_post_idx] <- "" 
 
 ##15&17
-hfq_9_post_idx <- which(df$hfq_9_post==0)
-df[hfq_9_post_idx,c(55:63)] <- "" 
+hfq_9_post_idx <- which(df_hfq_post$hfq_9_post==0)
+df_hfq_post[hfq_9_post_idx,c(55:63)] <- "" 
 
 ##specify
-specify_post <- grep("specify_post", fields)
-df[,specify_post][is.na(df[,specify_post])] <- ""
+specify <- grep("specify", colnames(df_hfq_post))
+df_hfq_post[,specify][is.na(df_hfq_post[,specify])] <- ""
+
+##replace df with df_hfq_post
+df[,hfq_post_idx] <- df_hfq_post[-1]
 
 # Falls and Trips Questionnaire for HD only
 ftq_temp <- grep("^falls_and_trips_questionnaire", fields)
@@ -297,6 +302,7 @@ df <- add_column(df, ipaq_score_pre, .after="ipaq_short_last_7_days_telephone_pr
 ls <- read.csv("assessment_ls_1022.csv")
 ls_score <- ls$total_score[match(df$as_correct,ls$as_correct)]
 df <- add_column(df, ls_score, .after="lifespace_complete")
+df$ls_score[is.na(df$ls_score)] <- ""
 
 ##add TMS/TFC/FA column
 df <- add_column(df, TMS, .after="motor_diagnostic")
@@ -310,12 +316,15 @@ colnames(met_post) <- c("id","Total")
 ipaq_score_post <- met_post$Total[match(df$as_correct,met_post$id)]
 df <- add_column(df, ipaq_score_post, .after="ipaq_short_last_7_days_telephone_post_complete")
 
+#delete timestamp columns
+timestamp <- grep("timestamp", colnames(df))
+df <- df[,-timestamp]
+
 #delete complete columns
-complete <- grep("complete", fields)
+complete <- grep("complete", colnames(df))
 df <- df[,-complete]
 
 #delete identifiable information
-date <- grep("bi_date", fields)
-df <- df[,-date]
+df <- df[,-c(3,5)]
 
 write.csv(df, "iWear_complete.csv", row.names=F)

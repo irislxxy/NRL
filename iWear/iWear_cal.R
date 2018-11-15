@@ -31,29 +31,28 @@ bi(df_HD)
 bi(df_CO)
 
 # TMS/TFC/FA
-df2 <- read.csv("iWear_1022.csv")
+df2 <- read.csv("iWear_complete.csv")
 
 # Exclude IW1TACO and IW01CFCO
-which(df2$as_correct == "IW1TACO")  # 37
+which(df2$as_correct == "IW1TACO")  # 11
 which(df2$as_correct == "IW01CFCO") # 1
-df2 <- df2[-c(1,37),]
+df2 <- df2[-c(1,11),]
 
 df2_HD <- df2[which(df2$hd_or_healthy==1),]
 df2_CO <- df2[which(df2$hd_or_healthy==2),]
 
 cal <- function(df2){
-  cat("TMS Mean:", round(mean(df2$TMS)), "\n")
-  cat("TMS SD:", round(sd(df2$TMS)), "\n")
-  cat("TMS Range:", range(df2$TMS), "\n")
+  cat("TMS Mean:", round(mean(df2$TMS,na.rm=T)), "\n")
+  cat("TMS SD:", round(sd(df2$TMS,na.rm=T)), "\n")
+  cat("TMS Range:", range(df2$TMS,na.rm=T), "\n")
   
-  cat("TFC Mean:", round(mean(df2$TFC)), "\n")
-  cat("TFC SD:", round(sd(df2$TFC)), "\n")
-  cat("TFC Range:", range(df2$TFC), "\n")
+  cat("TFC Mean:", round(mean(df2$TFC,na.rm=T)), "\n")
+  cat("TFC SD:", round(sd(df2$TFC,na.rm=T)), "\n")
+  cat("TFC Range:", range(df2$TFC,na.rm=T), "\n")
   
-  cat("FA Mean:", round(mean(df2$FA)), "\n")
-  cat("FA SD:", round(sd(df2$FA)), "\n")
-  cat("FA Range:", range(df2$FA), "\n")
+  cat("FA Mean:", round(mean(df2$FA,na.rm=T)), "\n")
+  cat("FA SD:", round(sd(df2$FA,na.rm=T)), "\n")
+  cat("FA Range:", range(df2$FA,na.rm=T), "\n")
 }
 
 cal(df2_HD)
-cal(df2_CO)
