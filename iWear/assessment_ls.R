@@ -1,7 +1,7 @@
 library(tibble)
 
 setwd("/Users/iris/Desktop/NRL/iWear")
-df <- read.csv("HDIWear_DATA_2018-06-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 df_HD <- df[which(df$hd_or_healthy==1),]
 fields <- colnames(df)
 
@@ -154,7 +154,7 @@ df_HD_ls$ls5_score <- (df_HD_ls$ls5*5) * df_HD_ls$ls5f * df_HD_ls$ls5_indep
 total_score <- rep(NA,n)
 df_HD_ls <- add_column(df_HD_ls, total_score, .after="ls5_score")
 df_HD_ls$total_score <- df_HD_ls$ls1_score + df_HD_ls$ls2_score + df_HD_ls$ls3_score + df_HD_ls$ls4_score + df_HD_ls$ls5_score
-write.csv(df_HD_ls, "assessment_ls.csv", row.names=F)
+write.csv(df_HD_ls, "assessment_ls_1022.csv", row.names=F)
 
 #Statistics
 mean(df_HD_ls$total_score)

@@ -1,3 +1,6 @@
+library(rJava)
+library(xlsxjars)
+library(xlsx)
 library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
@@ -73,6 +76,11 @@ df_ls[ls4_idx,c(15:21)][is.na(df_ls[ls4_idx,c(15:21)])] <- ""
 ls5_idx <- which(df_ls$ls5==0)
 df_ls[ls5_idx,c(19:21)][is.na(df_ls[ls5_idx,c(19:21)])] <- ""
 
+##add lifespace score column
+ls <- read.csv("assessment_ls_1022.csv")
+df_ls$ls_score <- ls$total_score[match(df_ls$as_correct,ls$as_correct)]
+df_ls$ls_score[is.na(df_ls$ls_score)] <- ""
+
 #IPAQ Short Last 7 Days PRE for everyone
 ipaq_pre_temp <- grep("^ipaq_short_last_7_days_telephone_pre", fields)
 ipaq_pre_idx <- seq(ipaq_pre_temp[1]+1, ipaq_pre_temp[2])
@@ -113,6 +121,12 @@ for (i in 1:nrow(df_ipaq_pre)){
     df_ipaq_pre[i,"ipaq_ts_sdhrs"] <- NA
   }
 }
+
+##add IPAQ PRE score column
+met_pre <- read.xlsx("IPAQ-SFScoring(pre).xlsx", 2, startRow=6)
+met_pre <- met_pre[1:73,c(1,24)]
+colnames(met_pre) <- c("id","Total")
+df_ipaq_pre$ipaq_score_pre <- met_pre$Total[match(df_ipaq_pre$as_correct,met_pre$id)]
 
 #IPAQ Short Last 7 Days Telephone POST for everyone
 ipaq_post_temp <- grep("^ipaq_short_last_7_days_telephone_post", fields)
@@ -155,6 +169,12 @@ for (i in 1:nrow(df_ipaq_post)){
   }
 }
 
+##add IPAQ POST score column
+met_post <- read.xlsx("IPAQ-SFScoring(post).xlsx", 2, startRow=6)
+met_post <- met_post[1:66,c(1,24)]
+colnames(met_post) <- c("id","Total")
+df_ipaq_post$ipaq_score_post <- met_post$Total[match(df_ipaq_post$as_correct,met_post$id)]
+
 #combine
 idx <- c("as_correct", "hd_or_healthy", "bi_sex", "bi_birthdate",
          sw_temp[-sw_timestamp], fields[func_idx])
@@ -163,9 +183,9 @@ df2 <- add_column(df2, TMS, .after = 4)
 df2 <- add_column(df2, TFC, .after = 5)
 df2 <- add_column(df2, FA, .after = 6)
 
-df3 <- merge(df2, df_ipaq_pre)
-df3 <- merge(df3, df_ls)
-df3 <- merge(df3, df_ipaq_post)
+df3 <- merge(df2, df_ipaq_pre, sort = F)
+df3 <- merge(df3, df_ls, sort = F)
+df3 <- merge(df3, df_ipaq_post, sort = F)
 
 #delete complete columns
 complete <- grep("complete", colnames(df3))

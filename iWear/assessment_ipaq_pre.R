@@ -4,7 +4,7 @@ library(xlsx)
 library(tibble)
 
 setwd("/Users/iris/Desktop/NRL/iWear")
-df <- read.csv("HDIWear_DATA_2018-06-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 fields <- colnames(df)
 
 #IPAQ Short Last 7 Days PRE for everyone
@@ -63,7 +63,7 @@ for (i in which(df_ipaq_pre$ipaq_ts_wday %in% c(0,8,9))){
 }
 
 df_ipaq_pre <- na.omit(df_ipaq_pre)
-write.csv(df_ipaq_pre, "assessment_ipaq_pre.csv", row.names=F)
+write.csv(df_ipaq_pre, "assessment_ipaq_pre_1022.csv", row.names=F)
 
 #MET-Minutes
 met <- read.xlsx("IPAQ-SFScoring(pre).xlsx", 2, startRow=6)
