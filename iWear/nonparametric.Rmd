@@ -1,0 +1,36 @@
+---
+title: "Nonparametric Test"
+output: pdf_document
+---
+
+## DTE
+```{r}
+dte <- read.csv("DTE_1028.csv", stringsAsFactors=FALSE)
+fields <- colnames(dte)
+dte_idx <- grep("dte",fields)
+idx <- c(1,2,dte_idx)
+df <- dte[,idx]
+```
+
+## Outcome
+```{r}
+# iwear <- read.csv("../iWear_complete.csv", stringsAsFactors=FALSE)
+# iwear <- iwear[,c(1,164,356)]
+# apdm <- read.csv("ANOVA.csv", stringsAsFactors=FALSE)
+# df <- merge(apdm, iwear, by = "as_correct")
+```
+
+## Kruskal-Wallis Test
+```{r}
+for (x in colnames(df)[-c(1,2)]){
+  t <- kruskal.test(df[,x] ~ df$hd_or_healthy)
+  cat(x, ":\n")
+  print(t)
+  if (t$p.value > 0.05){
+    cat("There are not significant differences between groups in", x, "\n\n\n")
+  }
+  else{
+    cat("There are significant differences between groups in", x, "\n\n\n")
+  }
+}
+```

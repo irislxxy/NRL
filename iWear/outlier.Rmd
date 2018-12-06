@@ -25,7 +25,8 @@ numList <- unlist(numList)
 
 ```{r}
 is_outlier <- function(x) {
-  return(x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
+  return( x < quantile(x, 0.25, na.rm = T) - 1.5 * IQR(x, na.rm = T) | 
+          x > quantile(x, 0.75, na.rm = T) + 1.5 * IQR(x, na.rm = T))
 }
 
 for (i in numList){

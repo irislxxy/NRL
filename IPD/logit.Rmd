@@ -1,0 +1,18 @@
+---
+title: "Logistic Regression"
+output: pdf_document
+---
+
+```{r}
+df <- read.csv("datasets/imp_1.csv")
+```
+
+```{r}
+df <- df[df$Group=="intervention", -c(1:4,8)]
+df$Gender <- factor(df$Gender)
+```
+
+```{r}
+fit <- glm(responder ~ ., data = df, family = "binomial")
+summary(fit)
+```

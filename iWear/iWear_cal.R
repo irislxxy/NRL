@@ -1,6 +1,4 @@
 setwd("/Users/iris/Desktop/NRL/iWear")
-
-# bi
 df <- read.csv("HDIWear_DATA_2018-10-22.csv")
 
 # Exclude IW1TACO and IW01CFCO

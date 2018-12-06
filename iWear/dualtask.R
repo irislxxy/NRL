@@ -112,11 +112,9 @@ dte$motor_tug_dte <- -100 * (dte$TUG.with.Cognitive.Duration - dte$TUG.Duration)
 df_hd <- df[,c("as_correct","hd_or_healthy")]
 dte <- merge(df_hd, dte, all.x = T)
 which(is.na(dte), arr.ind=TRUE) #IW13TC/IW4TC as_eol_time
-# dte <- na.omit(dte)
 write.csv(dte, "Dual Task/DTE_1028.csv", row.names = F)
 
-# df_anova <- merge(df_hd, df_apdm[,c(1:7,11,15,19,20,21)], all.x = T)
+# df_anova <- merge(df_hd, df_apdm[,c(1:7,8,12,16,20,21)], all.x = T)
 # df_anova <- merge(df_anova, dte[,c(1,grep("crr",colnames(dte)))], all.x = T)
-# which(is.na(df_anova), arr.ind=TRUE) #GH9/GH12/GH17/IW4TC/IW13TC
-# df_anova <- na.omit(df_anova)
+# which(is.na(df_anova), arr.ind=TRUE)
 # write.csv(df_anova, "Dual Task/ANOVA.csv", row.names = F)

@@ -83,7 +83,8 @@ ggplot(df_sway_HD, aes(x = task, y = value, fill = condition)) +
   theme(axis.title.x = element_blank(),
         text = element_text(size=15)) +
   labs(y = "Sway Area (degrees^2)") +
-  scale_fill_manual(values=c("#AED6F1","#2E86C1"))
+  # scale_fill_manual(values=c("#AED6F1","#2E86C1"))
+  scale_fill_manual(values=c("#A9DFBF","#1E8449"))
 ggsave("swayarea_box_HD_group.png")
 
 df_sway_CO$task <- substr(df_sway_CO$variable,1,2)
@@ -98,7 +99,8 @@ ggplot(df_sway_CO, aes(x = task, y = value, fill = condition)) +
   theme(axis.title.x = element_blank(),
         text = element_text(size=15)) +
   labs(y = "Sway Area (degrees^2)") +
-  scale_fill_manual(values=c("#AED6F1","#2E86C1"))
+  # scale_fill_manual(values=c("#AED6F1","#2E86C1"))
+  scale_fill_manual(values=c("#A9DFBF","#1E8449"))
 ggsave("swayarea_box_CO_group.png")
 
 ##box plot with scatter
