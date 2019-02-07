@@ -2,9 +2,9 @@ library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
 #APDM
-df_sway <- read.csv("APDM/Sway Area.csv", header=T, stringsAsFactors=FALSE)
-df_gait <- read.csv("APDM/Walk.csv", header=T, stringsAsFactors=FALSE)
-df_tug <- read.csv("APDM/TUG.csv", header=T, stringsAsFactors=FALSE)
+df_sway <- read.csv("APDM/selectedMeasure/Sway Area.csv", header=T, stringsAsFactors=FALSE)
+df_gait <- read.csv("APDM/selectedMeasure/Walk.csv", header=T, stringsAsFactors=FALSE)
+df_tug <- read.csv("APDM/selectedMeasure/TUG.csv", header=T, stringsAsFactors=FALSE)
 
 df_apdm <- merge(df_sway, df_gait)
 df_apdm <- merge(df_apdm, df_tug)

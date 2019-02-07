@@ -35,7 +35,11 @@ for (i in 1:nrow(df)){
 # WHO DAS for HD only
 whodas_temp <- grep("^who_das", fields)
 whodas_idx <- seq(whodas_temp[1]+1, whodas_temp[2]-1)
-df[df$hd_or_healthy==2,whodas_idx] <- ""
+whodas_col <- fields[whodas_idx]
+
+##whodas score
+whodas_s12 <- whodas_idx[1:12]
+whodas_score <- rowSums(df[whodas_s12])
 
 # History of Falls Questionnaire PRE for HD only
 hfq_temp <- grep("^history_of_falls_questionnaire_pre", fields)
@@ -176,6 +180,7 @@ df[,ls_idx] <- df_ls[-1]
 
 # Non-UHDRS Sitting Tasks + 2 Minute Walk Distance + Balance and Walking Cognitive Records + UHDRS
 ##motor
+##IW11TC - motor_diagnostic / IW13GHI - motor_dystonia_trunk.
 motor <- fields[251:282]
 df_motor <- df[motor]
 df_motor[df_motor >= 98] <- NA
@@ -291,40 +296,60 @@ ae_temp <- grep("^adverse_event_ae_and_serious_adverse_event_sae_rep", fields)
 ae_idx <- seq(ae_temp[1]+1, ae_temp[2])
 df[df$hd_or_healthy==2,ae_idx] <- ""
 
-##add IPAQ PRE score column
+# add age column
+age <- 2018 - as.numeric(substr(df$bi_birthdate, 1, 4))
+df <- add_column(df, age, .after="bi_birthdate")
+
+# add WHO DAS score column
+df <- add_column(df, whodas_score, .after="whodas_15b")
+whodas_col <- c(whodas_col, "whodas_score")
+df[df$hd_or_healthy==2,whodas_col] <- ""
+
+# add IPAQ PRE score column
 met_pre <- read.xlsx("IPAQ-SFScoring(pre).xlsx", 2, startRow=6)
 met_pre <- met_pre[1:73,c(1,24)]
 colnames(met_pre) <- c("id","Total")
 ipaq_score_pre <- met_pre$Total[match(df$as_correct,met_pre$id)]
 df <- add_column(df, ipaq_score_pre, .after="ipaq_short_last_7_days_telephone_pre_complete")
 
-##add LifeSpace score column
+# add LifeSpace score column
 ls <- read.csv("assessment_ls_1022.csv")
 ls_score <- ls$total_score[match(df$as_correct,ls$as_correct)]
 df <- add_column(df, ls_score, .after="lifespace_complete")
 df$ls_score[is.na(df$ls_score)] <- ""
 
-##add TMS/TFC/FA column
+# add TMS/TFC/FA column
 df <- add_column(df, TMS, .after="motor_diagnostic")
 df <- add_column(df, TFC, .after="uhdrs_carelevel")
 df <- add_column(df, FA, .after="func_assess_25")
 
-##add IPAQ POST score column
+# add Balance_Subscore column
+# Balance_Subscore = Sum of Tandem Walk and Retropulsion Pull Tests from UHDRS Motor 
+Balance_Subscore = df$motor_tandem_walking + df$motor_retropulsion
+df <- add_column(df, Balance_Subscore, .after="TMS")
+
+# add Chore_Subscore column
+# Chore_Subscore = Sum of Maximal Chorea Measures (i.e, Face, BOL, Trunk, RUE, LUE, RLE, LLE)  
+Chore_Subscore = df$motor_chorea_face + df$motor_chorea_bol + df$motor_chorea_trunk +
+  df$motor_chorea_rue + df$motor_chorea_lue + df$motor_chorea_rle + df$motor_chorea_lle
+df <- add_column(df, Chore_Subscore, .after="Balance_Subscore")
+
+# add IPAQ POST score column
 met_post <- read.xlsx("IPAQ-SFScoring(post).xlsx", 2, startRow=6)
 met_post <- met_post[1:66,c(1,24)]
 colnames(met_post) <- c("id","Total")
 ipaq_score_post <- met_post$Total[match(df$as_correct,met_post$id)]
 df <- add_column(df, ipaq_score_post, .after="ipaq_short_last_7_days_telephone_post_complete")
 
-#delete timestamp columns
+# delete timestamp columns
 timestamp <- grep("timestamp", colnames(df))
 df <- df[,-timestamp]
 
-#delete complete columns
+# delete complete columns
 complete <- grep("complete", colnames(df))
 df <- df[,-complete]
 
-#delete identifiable information
-df <- df[,-c(3,5)]
+# delete redcap_survey_identifier column
+df <- df[,-3]
 
-write.csv(df, "iWear_complete.csv", row.names=F)
+write.csv(df, "iWear_complete_0206.csv", row.names=F)

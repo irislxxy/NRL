@@ -1,0 +1,71 @@
+setwd("~/Desktop/NRL/iWear")
+
+# iWear
+iwear <- read.csv("iWear_complete_0206.csv")
+df_subscore <- iwear[c(1,269,270)]
+
+# APDM
+apdm <- read.csv("APDM/FAEOFirm.csv", stringsAsFactors=FALSE)
+apdm$X[1:20] <- paste0("IW", substr(apdm$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_sway <- apdm[c(1,12,15,21,30)]
+colnames(df_sway)[1] <- "as_correct"
+
+# merge
+df <- merge(df_subscore, df_sway, sort = F)
+## remove control group
+df <- na.omit(df)
+
+# plot
+library(ggplot2)
+
+## balance
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Jerk..m.2.s.5., y = Balance_Subscore)) +
+  labs(title = "Balance vs Jerk",
+       subtitle = cor(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$Balance_Subscore),
+       x = "Jerk (m^2/s^5)", y = "Balance")
+
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Mean.Velocity..m.s., y = Balance_Subscore)) +
+  labs(title = "Balance vs Mean Velocity",
+       subtitle = cor(df$Postural.Sway...Acc...Mean.Velocity..m.s., df$Balance_Subscore),
+       x = "Mean Velocity (m/s)", y = "Balance")
+
+ggplot(df) +
+  geom_point(aes(Postural.Sway...Acc...RMS.Sway..m.s.2., y = Balance_Subscore)) +
+  labs(title = "Balance vs RMS Sway",
+       subtitle = cor(df$Postural.Sway...Acc...RMS.Sway..m.s.2., df$Balance_Subscore),
+       x = "RMS Sway (m/s^2)", y = "Balance")
+
+ggplot(df) +
+  geom_point(aes(Postural.Sway...Angles...Sway.Area..degrees.2., y = Balance_Subscore)) +
+  labs(title = "Balance vs Sway Area",
+       subtitle = cor(df$Postural.Sway...Angles...Sway.Area..degrees.2., df$Balance_Subscore),
+       x = "Sway Area (degrees^2)", y = "Balance")
+
+## Chore
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Jerk..m.2.s.5., y = Chore_Subscore)) +
+  labs(title = "Chore vs Jerk",
+       subtitle = cor(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$Chore_Subscore),
+       x = "Jerk (m^2/s^5)", y = "Chore")
+
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Mean.Velocity..m.s., y = Chore_Subscore)) +
+  labs(title = "Chore vs Mean Velocity",
+       subtitle = cor(df$Postural.Sway...Acc...Mean.Velocity..m.s., df$Chore_Subscore),
+       x = "Mean Velocity (m/s)", y = "Chore")
+
+ggplot(df) +
+  geom_point(aes(Postural.Sway...Acc...RMS.Sway..m.s.2., y = Chore_Subscore)) +
+  labs(title = "Chore vs RMS Sway",
+       subtitle = cor(df$Postural.Sway...Acc...RMS.Sway..m.s.2., df$Chore_Subscore),
+       x = "RMS Sway (m/s^2)", y = "Chore")
+
+ggplot(df) +
+  geom_point(aes(Postural.Sway...Angles...Sway.Area..degrees.2., y = Chore_Subscore)) +
+  labs(title = "Chore vs Sway Area",
+       subtitle = cor(df$Postural.Sway...Angles...Sway.Area..degrees.2., df$Chore_Subscore),
+       x = "Sway Area (degrees^2)", y = "Chore")
