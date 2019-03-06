@@ -328,11 +328,26 @@ df <- add_column(df, FA, .after="func_assess_25")
 Balance_Subscore = df$motor_tandem_walking + df$motor_retropulsion
 df <- add_column(df, Balance_Subscore, .after="TMS")
 
-# add Chore_Subscore column
-# Chore_Subscore = Sum of Maximal Chorea Measures (i.e, Face, BOL, Trunk, RUE, LUE, RLE, LLE)  
-Chore_Subscore = df$motor_chorea_face + df$motor_chorea_bol + df$motor_chorea_trunk +
+# add Chorea_Subscore column
+# Chorea_Subscore = Sum of Maximal Chorea Measures (i.e, Face, BOL, Trunk, RUE, LUE, RLE, LLE)  
+Chorea_Subscore = df$motor_chorea_face + df$motor_chorea_bol + df$motor_chorea_trunk +
   df$motor_chorea_rue + df$motor_chorea_lue + df$motor_chorea_rle + df$motor_chorea_lle
-df <- add_column(df, Chore_Subscore, .after="Balance_Subscore")
+df <- add_column(df, Chorea_Subscore, .after="Balance_Subscore")
+
+# add Dystonia_Subscore column
+# Dystonia_Subscore = Sum of Maximal Dystonia and Rigidity
+Dystonia_Subscore = df$motor_dystonia_trunk + df$motor_dystonia_rue + df$motor_dystonia_lue +
+  df$motor_dystonia_rle + df$motor_dystonia_lle + df$motor_rigid_arm_right + df$motor_rigid_arm_left
+df <- add_column(df, Dystonia_Subscore, .after="Balance_Subscore")
+
+# add Chorea_Eye_Subscore column
+Chorea_Eye_Subscore = df$motor_ocular_horiz + df$motor_ocular_vert + 
+  df$motor_sacc_int_horiz + df$saccade_int_vert  + df$motor_sacc_veloc_horiz + df$motor_sacc_veloc_vert
+df <- add_column(df, Chorea_Eye_Subscore, .after="Chorea_Subscore")
+
+# add Chorea_Total_Subscore column
+Chorea_Total_Subscore = df$Chorea_Subscore + df$Chorea_Eye_Subscore
+df <- add_column(df, Chorea_Total_Subscore, .after="Chorea_Eye_Subscore")
 
 # add IPAQ POST score column
 met_post <- read.xlsx("IPAQ-SFScoring(post).xlsx", 2, startRow=6)
@@ -352,4 +367,4 @@ df <- df[,-complete]
 # delete redcap_survey_identifier column
 df <- df[,-3]
 
-write.csv(df, "iWear_complete_0206.csv", row.names=F)
+write.csv(df, "iWear_complete_0219.csv", row.names=F)

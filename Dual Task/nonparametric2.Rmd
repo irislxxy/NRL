@@ -1,0 +1,21 @@
+---
+title: "Nonparametric Test"
+output: pdf_document
+---
+
+```{r}
+df <- read.csv("DTE2.csv", stringsAsFactors=FALSE)
+
+# Kruskal-Wallis Test
+for (x in colnames(df)[-c(1,2)]){
+  t <- kruskal.test(df[,x] ~ df$hd_or_healthy)
+  cat(x, ":\n")
+  print(t)
+  if (t$p.value > 0.05){
+    cat("There are not significant differences between groups in", x, "\n\n\n")
+  }
+  else{
+    cat("There are significant differences between groups in", x, "\n\n\n")
+  }
+}
+```

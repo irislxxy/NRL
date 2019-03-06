@@ -1,10 +1,10 @@
 library(tibble)
-setwd("/Users/iris/Desktop/NRL/iWear")
+setwd("/Users/iris/Desktop/NRL")
 
 #APDM
-df_sway <- read.csv("APDM/selectedMeasure/Sway Area.csv", header=T, stringsAsFactors=FALSE)
-df_gait <- read.csv("APDM/selectedMeasure/Walk.csv", header=T, stringsAsFactors=FALSE)
-df_tug <- read.csv("APDM/selectedMeasure/TUG.csv", header=T, stringsAsFactors=FALSE)
+df_sway <- read.csv("APDM/Measure/Sway Area.csv", header=T, stringsAsFactors=FALSE)
+df_gait <- read.csv("APDM/Measure/Walk.csv", header=T, stringsAsFactors=FALSE)
+df_tug <- read.csv("APDM/Measure/TUG.csv", header=T, stringsAsFactors=FALSE)
 
 df_apdm <- merge(df_sway, df_gait)
 df_apdm <- merge(df_apdm, df_tug)
@@ -22,7 +22,7 @@ EOL.Gait.Speed <- (df_apdm$EOL.Gait.Speed.L + df_apdm$EOL.Gait.Speed.R)/2
 df_apdm <- add_column(df_apdm, EOL.Gait.Speed, .after = "EOL.Gait.Speed.R")
 
 #REDCap
-df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE)
+df <- read.csv("iWear/HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE)
 fields <- colnames(df)
 
 #participants: TC, Wayne State and Germany

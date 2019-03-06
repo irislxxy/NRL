@@ -1,0 +1,38 @@
+---
+title: "DTE2"
+output: pdf_document
+---
+
+```{r}
+setwd("/Users/iris/Desktop/NRL/Dual Task")
+df <- read.csv("DTE2.csv")
+fields <- colnames(df)
+
+# remove DTE columns
+idx_DTE <- grep("DTE", fields)
+df <- df[,-idx_DTE]
+fields <- colnames(df)
+
+df_HD <- df[which(df$hd_or_healthy==1),]
+df_CO <- df[which(df$hd_or_healthy==2),]
+```
+
+## HD
+```{r}
+for (i in 3:length(df_HD)){
+  cat(fields[i], "\n")
+  cat("Mean:", mean(df_HD[,i],na.rm=T), "\n")
+  cat("SD:", sd(df_HD[,i],na.rm=T), "\n")
+  cat("\n")
+}
+```
+
+## CO
+```{r}
+for (i in 3:length(df_CO)){
+  cat(fields[i], "\n")
+  cat("Mean:", mean(df_CO[,i],na.rm=T), "\n")
+  cat("SD:", sd(df_CO[,i],na.rm=T), "\n")
+  cat("\n")
+}
+```

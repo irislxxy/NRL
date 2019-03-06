@@ -4,14 +4,14 @@ output: pdf_document
 ---
 
 ```{r}
-setwd("~/Desktop/NRL/iWear")
+setwd("~/Desktop/NRL")
 
 # iWear
-iwear <- read.csv("iWear_complete_0206.csv")
+iwear <- read.csv("iWear/iWear_complete_0206.csv")
 df_subscore <- iwear[c(1,269,270)]
 
 # APDM
-apdm <- read.csv("../APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
+apdm <- read.csv("APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
 apdm$X[1:20] <- paste0("IW", substr(apdm$X[1:20],3,4), "GHI")
 ## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
 ## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
