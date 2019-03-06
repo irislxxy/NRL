@@ -1,15 +1,23 @@
-# Feet Apart, Eyes Open, Firm Surface
+# Feet Together, Eyes Open, Firm Surface with Stroop
 setwd("~/Desktop/NRL/APDM")
 
 # GHI
-## fix GH1/GH19/GH20 condition manually - Eyes Closed
 GHIpath <- "GHI"
 GHIfiles <- list.files(GHIpath)
 for (x in GHIfiles){
   id <- unlist(strsplit(x, "_"))[4]
   path <- paste0(GHIpath,"/",x)
   files <- list.files(path)
-  filepath <- paste0(GHIpath,"/",x,"/",files[3])
+  if (id == "GH1" | id == "GH3") {
+    filepath <- paste0(GHIpath,"/",x,"/",files[5])
+  }
+  else if (id == "GH19" | id == "GH20"){
+    fileidx <- grep("FTEOFirmwstroop",files) 
+    filepath <- paste0(GHIpath,"/",x,"/",files[fileidx])
+  }
+  else{
+    filepath <- paste0(GHIpath,"/",x,"/",files[6])
+  }
   f <- read.csv(filepath, stringsAsFactors = F, skip = 9)
   # check condition
   condition <- read.csv(filepath, stringsAsFactors = F)
@@ -27,7 +35,7 @@ for (x in GHIfiles){
     rownames(df)[nrow(df)] <- id
   }
 }
-  
+
 # TC
 ## fix IW11TC/IW14TCCO/IW15TC/IW1TC/IW1TCCO/IW5TCCO/IW6TC filename manually
 TCpath <- "TC"
@@ -36,7 +44,7 @@ for (x in TCfiles){
   id <- unlist(strsplit(x, "_"))[4]
   path <- paste0(TCpath,"/",x)
   files <- list.files(path)
-  fileidx <- grep("FAEOFirm_",files) 
+  fileidx <- grep("FTEOFirmwstroop",files) 
   filepath <- paste0(TCpath,"/",x,"/",files[fileidx])
   f <- read.csv(filepath, stringsAsFactors = F, skip = 9)
   # check condition
@@ -55,10 +63,10 @@ for (x in WSfiles){
   path <- paste0(WSpath,"/",x)
   files <- list.files(path)
   if (x == "IW8WS") {
-    filepath <- paste0(WSpath,"/",x,"/",files[13])
+    filepath <- paste0(WSpath,"/",x,"/",files[16])
   }
   else{
-    filepath <- paste0(WSpath,"/",x,"/",files[12])
+    filepath <- paste0(WSpath,"/",x,"/",files[15])
   }
   f <- read.csv(filepath, stringsAsFactors = F, skip = 9)
   # check condition
@@ -69,4 +77,4 @@ for (x in WSfiles){
   rownames(df)[nrow(df)] <- id
 }
 
-write.csv(df, "FAEOFirm.csv")
+write.csv(df, "FTEOFirmStroop.csv")
