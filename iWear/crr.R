@@ -52,20 +52,3 @@ df_wwt$eol_duration <- duration$WWTT..Every.other.letter..[match(df_wwt$as_corre
 df_wwt$eol_crr <- (df_wwt$wwt_eol_correct - df_wwt$wwt_eol_errors)/df_wwt$eol_duration
 
 write.csv(df_wwt, "wwt_crr.csv", row.names = F)
-
-#DKEFS d_kefs
-dkefs <- grep("d_kefs", fields)
-df_dkefs <- df[,c(1,dkefs)]
-
-##Check Equality
-interval4 <- df_dkefs$d_kefs_1_15+df_dkefs$d_kefs_16_30+df_dkefs$d_kefs_31_45+df_dkefs$d_kefs_46_60
-category2 <- df_dkefs$d_kefs_fruits+df_dkefs$d_kefs_furniture
-df_dkefs <- add_column(df_dkefs, interval4==category2, .after="d_kefs_furniture")
-df_dkefs <- add_column(df_dkefs, category2==df_dkefs$d_kefs_totalcorrect1, .after="d_kefs_totalcorrect1")
-
-interval4_2 <- df_dkefs$d_kefs_1_15_2+df_dkefs$d_kefs_16_30_2+df_dkefs$d_kefs_31_45_2+df_dkefs$d_kefs_46_60_2
-category2_2 <- df_dkefs$d_kefs_fruits2+df_dkefs$d_kefs_furniture2
-df_dkefs <- add_column(df_dkefs, interval4_2==category2_2, .after="d_kefs_furniture2")
-df_dkefs <- add_column(df_dkefs, category2_2==df_dkefs$d_kefs_totalcorrect, .after="d_kefs_totalcorrect")
-
-write.csv(df_dkefs, "dkefs_equality.csv", row.names = F)
