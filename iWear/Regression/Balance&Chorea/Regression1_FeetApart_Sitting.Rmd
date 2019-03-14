@@ -1,0 +1,135 @@
+---
+title: "Regression on FeetApart + Sitting"
+output: pdf_document
+---
+
+I first check the multicollinearity and recursively remove variables with VIF > 10. Based on the remaining variables, I perform stepwise selection and best subset selection. And if the best model results are different, I compare two models using ANOVA.
+
+```{r}
+library(car)
+library(MASS)
+library(leaps)
+```
+
+```{r}
+# iWear
+iwear <- read.csv("../../../iWear/iWear_complete_0206.csv")
+df_subscore <- iwear[c(1,269,270)]
+
+# APDM - standing
+apdm_standing <- read.csv("../../../APDM/FAEOFirm.csv", stringsAsFactors=FALSE)
+apdm_standing$X[1:20] <- paste0("IW", substr(apdm_standing$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_standing <- apdm_standing[c(1,12,15,21,30)]
+colnames(df_standing) <- c("as_correct",
+                           "Jerk_Standing","Mean_Velocity_Standing",
+                           "RMS_Sway_Standing","Sway_Area_Standing")
+
+# APDM - sitting
+apdm_sitting <- read.csv("../../../APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
+apdm_sitting$X[1:20] <- paste0("IW", substr(apdm_sitting$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_sitting <- apdm_sitting[c(1,12,15,21,30)]
+colnames(df_sitting) <- c("as_correct",
+                          "Jerk_Sitting","Mean_Velocity_Sitting",
+                          "RMS_Sway_Sitting","Sway_Area_Sitting")
+
+# merge
+df <- merge(df_subscore, df_standing, sort = F)
+df <- merge(df, df_sitting, sort = F) ## remove 8 WS
+## remove control group
+df <- na.omit(df) ## 20GHI+15TC
+```
+
+# Balance
+```{r}
+mod_balance <- lm(Balance_Subscore ~., data = df[,-c(1,3)])
+summary(mod_balance)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_balance)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Balance_Subscore ~ ", paste (signif_all, collapse=" + "), sep="")) ## new formula
+  mod_balance_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_balance_vif)
+}
+print(all_vifs)
+
+summary(mod_balance_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_balance <- lm(Balance_Subscore ~ Jerk_Standing + Mean_Velocity_Standing + Sway_Area_Standing + Jerk_Sitting + Mean_Velocity_Sitting + Sway_Area_Sitting, data = df)
+
+## Stepwise regression model
+step.mod_balance <- stepAIC(full.mod_balance, direction = "both", trace = FALSE)
+summary(step.mod_balance)
+```
+
+## Best Subset Selection
+```{r}
+regsubsetsObj <- regsubsets(x=df[,c(4,5,7,8,9,11)] ,y=df$Balance_Subscore, nbest = 2, really.big = T)
+plot(regsubsetsObj, scale = "adjr2")  
+```
+
+```{r}
+mod1 <- lm(Balance_Subscore ~ Jerk_Standing, data = df)
+mod2 <- lm(Balance_Subscore ~ Jerk_Standing + Mean_Velocity_Standing, data = df)
+anova(mod1,mod2)
+```
+### For the p-value is 0.1813, the mod2 is not significantly different from mod1. Therefore, the best model is Balance_Subscore ~ Jerk_Standing.
+
+# Chore
+```{r}
+mod_chore <- lm(Chore_Subscore ~., data = df[,-c(1,2)])
+summary(mod_chore)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_chore)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Chore_Subscore ~ ", paste (signif_all, collapse=" + "), sep=""))  ## new formula
+  mod_chore_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_chore_vif)
+}
+print(all_vifs)
+
+summary(mod_chore_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_chore <- lm(Chore_Subscore ~ Jerk_Standing + Mean_Velocity_Standing + Sway_Area_Standing + Jerk_Sitting + Mean_Velocity_Sitting + Sway_Area_Sitting, data = df)
+
+## Stepwise regression model
+step.mod_chore <- stepAIC(full.mod_chore, direction = "both", trace = FALSE)
+summary(step.mod_chore)
+```
+
+## Best Subset Selection
+```{r}
+regsubsetsObj <- regsubsets(x=df[,c(4,5,7,8,9,11)] ,y=df$Chore_Subscore, nbest = 2, really.big = T)
+plot(regsubsetsObj, scale = "adjr2")
+```
+
+### The best model is Chore_Subscore ~ Sway_Area_Standing + Jerk_Sitting.

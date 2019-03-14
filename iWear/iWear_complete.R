@@ -356,6 +356,10 @@ colnames(met_post) <- c("id","Total")
 ipaq_score_post <- met_post$Total[match(df$as_correct,met_post$id)]
 df <- add_column(df, ipaq_score_post, .after="ipaq_short_last_7_days_telephone_post_complete")
 
+# add step_count column
+iwear_step <- read.xlsx("iwear_step_summary_29012018.xlsx", 1)
+df$step_count <- iwear_step$step_count[match(df$as_correct,iwear_step$PID)]
+
 # delete timestamp columns
 timestamp <- grep("timestamp", colnames(df))
 df <- df[,-timestamp]
@@ -367,4 +371,4 @@ df <- df[,-complete]
 # delete redcap_survey_identifier column
 df <- df[,-3]
 
-write.csv(df, "iWear_complete_0219.csv", row.names=F)
+write.csv(df, "iWear_complete_0313.csv", row.names=F)

@@ -1,0 +1,43 @@
+---
+title: "Regression - Physical Activity"
+output: pdf_document
+---
+
+```{r}
+library(car)
+library(MASS)
+library(leaps)
+```
+
+```{r}
+# iWear - Step Count
+iwear <- read.csv("../../iWear/iWear_complete_0313.csv")
+df_sc <- iwear[c(1,521)]
+
+# Feet Apart - Jerk / Sway Area
+apdm_faeofs <- read.csv("../../APDM/FAEOFirm.csv", stringsAsFactors=FALSE)
+apdm_faeofs$X[1:20] <- paste0("IW", substr(apdm_faeofs$X[1:20],3,4), "GHI")
+df_faeofs <- apdm_faeofs[c(1,12,30)]
+colnames(df_faeofs) <- c("as_correct","jerk","sway_area")
+
+# Walk - Gait Speed / Stride Length
+apdm_walk<- read.csv("../../APDM/Walk.csv", stringsAsFactors=FALSE)
+apdm_walk$X[1:20] <- paste0("IW", substr(apdm_walk$X[1:20],3,4), "GHI")
+df_walk <- apdm_walk[1]
+colnames(df_walk) <- c("as_correct")
+df_walk$gait_speed <- (apdm_walk$Gait...Lower.Limb...Gait.Speed.L..m.s. +
+                         apdm_walk$Gait...Lower.Limb...Gait.Speed.R..m.s.)/2
+df_walk$stride_length <- (apdm_walk$Gait...Lower.Limb...Stride.Length.L..m. +
+                            apdm_walk$Gait...Lower.Limb...Stride.Length.R..m.)/2
+
+# merge
+df <- merge(df_sc, df_faeofs, sort = F)
+df <- merge(df, df_walk, sort = F)
+# remove step_count NA
+df <- na.omit(df)
+```
+
+```{r}
+mod <- lm(step_count ~., data = df[,-1])
+summary(mod)
+```

@@ -1,0 +1,153 @@
+---
+title: "Regression on FeetApartStroop + FeetTogetherStroop"
+output: pdf_document
+---
+
+I first check the multicollinearity and recursively remove variables with VIF > 10. Based on the remaining variables, I perform stepwise selection and best subset selection. And if the best model results are different, I compare two models using ANOVA.
+
+```{r}
+library(car)
+library(MASS)
+library(leaps)
+```
+
+```{r}
+# iWear
+iwear <- read.csv("../../../iWear/iWear_complete_0219.csv")
+df_subscore <- iwear[c(1,269:273)]
+
+# APDM - standing
+## Feet Apart
+apdm_faeofs <- read.csv("../../../APDM/FAEOFirmStroop.csv", stringsAsFactors=FALSE)
+apdm_faeofs$X[1:20] <- paste0("IW", substr(apdm_faeofs$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_faeofs <- apdm_faeofs[c(1,12,15,21,30)]
+colnames(df_faeofs) <- c("as_correct",
+                         "Jerk_Standing_A","Mean_Velocity_Standing_A",
+                         "RMS_Sway_Standin_A","Sway_Area_Standing_A")
+
+## Feet Together
+apdm_fteofs <- read.csv("../../../APDM/FTEOFirmStroop.csv", stringsAsFactors=FALSE)
+apdm_fteofs$X[1:20] <- paste0("IW", substr(apdm_fteofs$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_fteofs <- apdm_fteofs[c(1,12,15,21,30)]
+colnames(df_fteofs) <- c("as_correct",
+                         "Jerk_Standing_T","Mean_Velocity_Standing_T",
+                         "RMS_Sway_Standin_T","Sway_Area_Standing_T")
+
+# merge
+df <- merge(df_subscore, df_faeofs, sort = F)
+df <- merge(df, df_fteofs, sort = F)
+## remove control group
+df <- na.omit(df) ## 20GHI+15TC+8WS
+```
+
+# Dystonia
+```{r}
+mod_dystonia <- lm(Dystonia_Subscore ~., data = df[,-c(1,2,4,5,6)])
+summary(mod_dystonia)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_dystonia)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Dystonia_Subscore ~ ", paste (signif_all, collapse=" + "), sep="")) ## new formula
+  mod_dystonia_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_dystonia_vif)
+}
+print(all_vifs)
+
+summary(mod_dystonia_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_dystonia <- lm(Dystonia_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Mean_Velocity_Standing_T + Sway_Area_Standing_T, data = df)
+
+## Stepwise regression model
+step.mod_dystonia <- stepAIC(full.mod_dystonia, direction = "both", trace = FALSE)
+summary(step.mod_dystonia)
+```
+### The best model is Dystonia_Subscore ~ Mean_Velocity_Standing_A.
+
+# Chorea_Eye
+```{r}
+mod_chorea_eye <- lm(Chorea_Eye_Subscore ~., data = df[,-c(1:4,6)])
+summary(mod_chorea_eye)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_chorea_eye)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Chorea_Eye_Subscore ~ ", paste (signif_all, collapse=" + "), sep=""))  ## new formula
+  mod_chorea_eye_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_chorea_eye_vif)
+}
+print(all_vifs)
+
+summary(mod_chorea_eye_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_chorea_eye <- lm(Chorea_Eye_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Mean_Velocity_Standing_T + Sway_Area_Standing_T, data = df)
+
+## Stepwise regression model
+step.mod_chorea_eye <- stepAIC(full.mod_chorea_eye, direction = "both", trace = FALSE)
+summary(step.mod_chorea_eye)
+```
+### The best model is Chorea_Eye_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Sway_Area_Standing_T.
+
+# Chorea_Total
+```{r}
+mod_chorea_total <- lm(Chorea_Total_Subscore ~., data = df[,-c(1:5)])
+summary(mod_chorea_total)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_chorea_total)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Chorea_Total_Subscore ~ ", paste (signif_all, collapse=" + "), sep=""))  ## new formula
+  mod_chorea_total_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_chorea_total_vif)
+}
+print(all_vifs)
+
+summary(mod_chorea_total_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_chorea_total <- lm(Chorea_Total_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Mean_Velocity_Standing_T + Sway_Area_Standing_T, data = df)
+
+## Stepwise regression model
+step.mod_chorea_total <- stepAIC(full.mod_chorea_total, direction = "both", trace = FALSE)
+summary(step.mod_chorea_total)
+```
+### The best model is Chorea_Total_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Sway_Area_Standing_T.

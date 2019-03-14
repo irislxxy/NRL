@@ -1,0 +1,151 @@
+---
+title: "Regression on Single + Dual + Sitting"
+output: pdf_document
+---
+
+I first check the multicollinearity and recursively remove variables with VIF > 10. Based on the remaining variables, I perform stepwise selection and best subset selection. And if the best model results are different, I compare two models using ANOVA.
+
+```{r}
+library(car)
+library(MASS)
+library(leaps)
+```
+
+```{r}
+# iWear
+iwear <- read.csv("../../../iWear/iWear_complete_0206.csv")
+df_subscore <- iwear[c(1,269,270)]
+
+# APDM - Single
+## Feet Apart
+apdm_faeofs <- read.csv("../../../APDM/FAEOFirm.csv", stringsAsFactors=FALSE)
+apdm_faeofs$X[1:20] <- paste0("IW", substr(apdm_faeofs$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_faeofs <- apdm_faeofs[c(1,12,15,21,30)]
+colnames(df_faeofs) <- c("as_correct",
+                         "Jerk_Standing_A","Mean_Velocity_Standing_A",
+                         "RMS_Sway_Standin_A","Sway_Area_Standing_A")
+
+## Feet Together
+apdm_fteofs <- read.csv("../../../APDM/FTEOFirm.csv", stringsAsFactors=FALSE)
+apdm_fteofs$X[1:20] <- paste0("IW", substr(apdm_fteofs$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_fteofs <- apdm_fteofs[c(1,12,15,21,30)]
+colnames(df_fteofs) <- c("as_correct",
+                         "Jerk_Standing_T","Mean_Velocity_Standing_T",
+                         "RMS_Sway_Standin_T","Sway_Area_Standing_T")
+
+# APDM - Dual
+## Feet Apart
+apdm_faeofs2 <- read.csv("../../../APDM/FAEOFirmStroop.csv", stringsAsFactors=FALSE)
+apdm_faeofs2$X[1:20] <- paste0("IW", substr(apdm_faeofs2$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_faeofs2 <- apdm_faeofs2[c(1,12,15,21,30)]
+colnames(df_faeofs2) <- c("as_correct",
+                          "Jerk_Standing_A2","Mean_Velocity_Standing_A2",
+                          "RMS_Sway_Standin_A2","Sway_Area_Standing_A2")
+
+## Feet Together
+apdm_fteofs2 <- read.csv("../../../APDM/FTEOFirmStroop.csv", stringsAsFactors=FALSE)
+apdm_fteofs2$X[1:20] <- paste0("IW", substr(apdm_fteofs2$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_fteofs2 <- apdm_fteofs2[c(1,12,15,21,30)]
+colnames(df_fteofs2) <- c("as_correct",
+                          "Jerk_Standing_T2","Mean_Velocity_Standing_T2",
+                          "RMS_Sway_Standin_T2","Sway_Area_Standing_T2")
+
+# APDM - sitting
+apdm_sitting <- read.csv("../../../APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
+apdm_sitting$X[1:20] <- paste0("IW", substr(apdm_sitting$X[1:20],3,4), "GHI")
+## Postural Sway - Acc - Jerk (m^2/s^5) / Postural Sway - Acc - Mean Velocity (m/s)
+## Postural Sway - Acc - RMS Sway (m/s^2) / Postural Sway - Angles - Sway Area (degrees^2)
+df_sitting <- apdm_sitting[c(1,12,15,21,30)]
+colnames(df_sitting) <- c("as_correct",
+                          "Jerk_Sitting","Mean_Velocity_Sitting",
+                          "RMS_Sway_Sitting","Sway_Area_Sitting")
+
+# merge
+df <- merge(df_subscore, df_faeofs, sort = F)
+df <- merge(df, df_fteofs, sort = F)
+df <- merge(df, df_faeofs2, sort = F) 
+df <- merge(df, df_fteofs2, sort = F)
+df <- merge(df, df_sitting, sort = F) 
+## remove control group
+df <- na.omit(df) ## 20GHI+15TC
+```
+
+# Balance
+```{r}
+mod_balance <- lm(Balance_Subscore ~., data = df[,-c(1,3)])
+summary(mod_balance)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_balance)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Balance_Subscore ~ ", paste (signif_all, collapse=" + "), sep="")) ## new formula
+  mod_balance_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_balance_vif)
+}
+print(all_vifs)
+
+summary(mod_balance_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_balance <- lm(Balance_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Mean_Velocity_Standing_T + Sway_Area_Standing_T + Jerk_Standing_A2 + Sway_Area_Standing_A2 + Mean_Velocity_Standing_T2 + Sway_Area_Standing_T2 + Jerk_Sitting + Mean_Velocity_Sitting, data = df)
+
+## Stepwise regression model
+step.mod_balance <- stepAIC(full.mod_balance, direction = "both", trace = FALSE)
+summary(step.mod_balance)
+```
+### The best model is Balance_Subscore ~ Jerk_Standing_A.
+
+# Chore
+```{r}
+mod_chore <- lm(Chore_Subscore ~., data = df[,-c(1,2)])
+summary(mod_chore)
+```
+
+## Multicollinearity
+```{r}
+## Recursively remove variables with VIF > 10
+all_vifs <- vif(mod_chore)
+print(all_vifs)
+
+signif_all <- names(all_vifs)
+while(any(all_vifs > 10)){
+  var_with_max_vif <- names(which(all_vifs == max(all_vifs))) ## get the var with max VIF
+  signif_all <- signif_all[!(signif_all) %in% var_with_max_vif] ## remove
+  myForm <- as.formula(paste("Chore_Subscore ~ ", paste (signif_all, collapse=" + "), sep=""))  ## new formula
+  mod_chore_vif <- lm(myForm, data = df) ## re-build model with new formula
+  all_vifs <- vif(mod_chore_vif)
+}
+print(all_vifs)
+
+summary(mod_chore_vif)
+```
+
+## Stepwise Selection
+```{r}
+## Fit the full model
+full.mod_chore <- lm(Chore_Subscore ~ Jerk_Standing_A + Mean_Velocity_Standing_A + Sway_Area_Standing_A + Mean_Velocity_Standing_T + Sway_Area_Standing_T + Jerk_Standing_A2 + Sway_Area_Standing_A2 + Mean_Velocity_Standing_T2 + Sway_Area_Standing_T2 + Jerk_Sitting + Mean_Velocity_Sitting, data = df)
+
+## Stepwise regression model
+step.mod_chore <- stepAIC(full.mod_chore, direction = "both", trace = FALSE)
+summary(step.mod_chore)
+```
+### The best model is Chore_Subscore ~ Sway_Area_Standing_A + Jerk_Standing_A2 + Jerk Sitting.
