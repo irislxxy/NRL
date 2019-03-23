@@ -1,6 +1,6 @@
 # z = (HD - normal mean) / normal sd
 setwd("/Users/iris/Desktop/NRL/iWear")
-data <- read.csv("iWear_complete_0219.csv")
+data <- read.csv("iWear_complete_0322.csv")
 data <- data[-1,] # Exclude IW01CFCO - No age 
 
 df <- data[,c("as_correct","hd_or_healthy","age")] # Age Range 30-79
@@ -111,8 +111,8 @@ for (i in which(!is.na(df$vf_f_correct))){
   else if (df$age[i] >= 30 & df$age[i] <= 39){
     df$vf_f_zscore[i] <- (df$vf_f_correct[i] - 43.1)/11.4
   }
-  else if (df$age[i] >= 40 & df$age[i] <= 49){ # ???
-    df$vf_f_zscore[i] <- (df$vf_f_correct[i] - ?)/?
+  else if (df$age[i] >= 40 & df$age[i] <= 49){ 
+    df$vf_f_zscore[i] <- (df$vf_f_correct[i] - 43.5)/12.2
   }
   else if (df$age[i] >= 50 & df$age[i] <= 59){
     df$vf_f_zscore[i] <- (df$vf_f_correct[i] - 42.1)/11.1
@@ -131,14 +131,66 @@ for (i in which(!is.na(df$vf_f_correct))){
 ## Letter A
 df$vf_a_correct <- data$vf_st2_9c7
 df$vf_a_zscore <- NA
+for (i in which(!is.na(df$vf_a_correct))){
+  if (df$age[i] <= 19){ # 16-19
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 39.9)/12
+  }
+  else if (df$age[i] >= 20 & df$age[i] <= 29){
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 41.2)/9.2
+  }
+  else if (df$age[i] >= 30 & df$age[i] <= 39){
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 43.1)/11.4
+  }
+  else if (df$age[i] >= 40 & df$age[i] <= 49){ 
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 43.5)/12.2
+  }
+  else if (df$age[i] >= 50 & df$age[i] <= 59){
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 42.1)/11.1
+  }
+  else if (df$age[i] >= 60 & df$age[i] <= 69){
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 38.5)/13.7
+  }
+  else if (df$age[i] >= 70 & df$age[i] <= 79){
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 34.8)/12.8
+  }
+  else{ # 80-94
+    df$vf_a_zscore[i] <- (df$vf_a_correct[i] - 28.9)/11.7
+  }
+}
 
 ## Letter S
 df$vf_s_correct <- data$vf_st2_9c72_089
 df$vf_s_zscore <- NA
+for (i in which(!is.na(df$vf_s_correct))){
+  if (df$age[i] <= 19){ # 16-19
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 39.9)/12
+  }
+  else if (df$age[i] >= 20 & df$age[i] <= 29){
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 41.2)/9.2
+  }
+  else if (df$age[i] >= 30 & df$age[i] <= 39){
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 43.1)/11.4
+  }
+  else if (df$age[i] >= 40 & df$age[i] <= 49){ 
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 43.5)/12.2
+  }
+  else if (df$age[i] >= 50 & df$age[i] <= 59){
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 42.1)/11.1
+  }
+  else if (df$age[i] >= 60 & df$age[i] <= 69){
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 38.5)/13.7
+  }
+  else if (df$age[i] >= 70 & df$age[i] <= 79){
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 34.8)/12.8
+  }
+  else{ # 80-94
+    df$vf_s_zscore[i] <- (df$vf_s_correct[i] - 28.9)/11.7
+  }
+}
 
 # Average z-scores 
 fields <- colnames(df)
-zscore_idx <- grep("zscore",fields2)
-df$composite_score <- mean(as.numeric(df[,zscore_idx]))
+zscore_idx <- grep("zscore",fields)
+df$composite_score <- rowMeans(df[,zscore_idx])
 
-# write.csv(df, "composite_score_norms.csv", row.names = F)
+write.csv(df, "composite_score_norms.csv", row.names = F)

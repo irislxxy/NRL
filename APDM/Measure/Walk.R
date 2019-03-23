@@ -1,5 +1,5 @@
 #Walk
-setwd("~/Desktop/NRL/iWear/APDM")
+setwd("~/Desktop/NRL/APDM")
 
 Condition <-  c("Walk Duration",
                 "Walk Gait Speed L",
@@ -9,7 +9,10 @@ Condition <-  c("Walk Duration",
                 "Alphabet Gait Speed R",
                 "EOL Duration",
                 "EOL Gait Speed L",
-                "EOL Gait Speed R")
+                "EOL Gait Speed R",
+                "DKEFS Duration",
+                "DKEFS Gait Speed L",
+                "DKEFS Gait Speed R")
 df <- data.frame(Condition)
 
 #GHI
@@ -46,6 +49,14 @@ for (x in GHIfiles){
       df[7,id] <- f$Mean[6]  #Duration
       df[8,id] <- f$Mean[15] #Gait Speed L
       df[9,id] <- f$Mean[16] #Gait Speed R
+    }
+    ##DKEFS
+    if (grepl("WalkDKEFS", filename)){
+      filepath <- paste0(GHIpath,"/",x,"/",filename)
+      f <- read.csv(filepath, stringsAsFactors = F, skip = 9)
+      df[10,id] <- f$Mean[6]  #Duration
+      df[11,id] <- f$Mean[15] #Gait Speed L
+      df[12,id] <- f$Mean[16] #Gait Speed R
     }
   }
 }
@@ -84,6 +95,14 @@ for (x in TCfiles){
       df[8,id] <- f$Mean[15] #Gait Speed L
       df[9,id] <- f$Mean[16] #Gait Speed R
     }
+    ##DKEFS
+    if (grepl("WalkDKEFS", filename)){
+      filepath <- paste0(TCpath,"/",x,"/",filename)
+      f <- read.csv(filepath, stringsAsFactors = F, skip = 9)
+      df[10,id] <- f$Mean[6]  #Duration
+      df[11,id] <- f$Mean[15] #Gait Speed L
+      df[12,id] <- f$Mean[16] #Gait Speed R
+    }
   }
 }
 
@@ -107,7 +126,11 @@ for (x in WSfiles){
   df[7,id] <- f$Duration..s.[which(f$Condition == "WWTT + Every Other Letter Alphabet")]
   df[8,id] <- f$Gait...Lower.Limb...Gait.Speed.L..m.s...mean.[which(f$Condition == "WWTT + Every Other Letter Alphabet")]
   df[9,id] <- f$Gait...Lower.Limb...Gait.Speed.R..m.s...mean.[which(f$Condition == "WWTT + Every Other Letter Alphabet")]
+  ##DKEFS
+  df[10,id] <- f$Duration..s.[which(f$Condition == "WWTT + DKEFS")]
+  df[11,id] <- f$Gait...Lower.Limb...Gait.Speed.L..m.s...mean.[which(f$Condition == "WWTT + DKEFS")]
+  df[12,id] <- f$Gait...Lower.Limb...Gait.Speed.R..m.s...mean.[which(f$Condition == "WWTT + DKEFS")]
 }
 
 df <- t(df)
-write.table(df, "Walk.csv", sep=",",  col.names=FALSE)
+write.table(df, "Measure/Walk.csv", sep=",",  col.names=FALSE)

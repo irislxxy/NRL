@@ -1,5 +1,5 @@
 setwd("/Users/iris/Desktop/NRL/iWear")
-df <- read.csv("iWear_complete_0313.csv")
+df <- read.csv("iWear_complete_0322.csv")
 
 # Exclude IW1TACO and IW01CFCO
 which(df$as_correct == "IW1TACO")  # 11
@@ -34,6 +34,9 @@ cal_df <- function(df){
   cat("Step Count:\n")
   cal(df$step_count)
   
+  cat("Composite Score:\n")
+  cal(df$composite_score)
+  
   cat("TMS:\n")
   cal(df$TMS)
   
@@ -67,8 +70,10 @@ df_CO <- df[which(df$hd_or_healthy==2),]
 bi(df_HD)
 bi(df_CO)
 cal_df(df_HD)
-cal(df_CO$ipaq_score_pre)
 cal(df_CO$step_count) # IW10CFCO 
+cal(df_CO$composite_score)
+cal(df_CO$ipaq_score_pre)
+
 
 # DT
 table(df$redcap_data_access_group)
@@ -81,11 +86,13 @@ df_DT_CO <- df_DT[which(df_DT$hd_or_healthy==2),]
 bi(df_DT_HD)
 bi(df_DT_CO)
 cal_df(df_DT_HD)
-cal(df_DT_CO$ipaq_score_pre)
 cal(df_DT_CO$step_count) 
+cal(df_DT_CO$composite_score) 
+cal(df_DT_CO$ipaq_score_pre)
+
 
 # Correlation
-cor_list <- c("TMS","TFC","FA","whodas_score","ipaq_score_pre","ls_score","func_assess_independ")
+cor_list <- c("composite_score","TMS","TFC","FA","whodas_score","ipaq_score_pre","ls_score","func_assess_independ")
 for (i in cor_list){
   sub <- c("step_count",i)
   df_sub <- df[,sub]

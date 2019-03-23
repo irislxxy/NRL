@@ -1,7 +1,7 @@
 library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
-df_iWear <- read.csv("HDIWear_DATA_2019-03-14.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df_iWear <- read.csv("HDIWear_DATA_2019-03-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 fields_iWear <- colnames(df_iWear)
 
 df_APDM <- read.csv("../APDM/Walk DKEFS.csv", stringsAsFactors=FALSE)
@@ -24,7 +24,7 @@ category2_2 <- df_dkefs$d_kefs_fruits2+df_dkefs$d_kefs_furniture2
 df_dkefs <- add_column(df_dkefs, interval4_2==category2_2, .after="d_kefs_furniture2")
 df_dkefs <- add_column(df_dkefs, category2_2==df_dkefs$d_kefs_totalcorrect, .after="d_kefs_totalcorrect")
 
-write.csv(df_dkefs, "dkefs_equality_0314.csv", row.names = F)
+write.csv(df_dkefs, "dkefs_equality_0322.csv", row.names = F)
 
 # 
 df <- merge(df_APDM, df_dkefs, by = "as_correct", sort = F)
@@ -37,4 +37,4 @@ df$baseline <- df$d_kefs_totalcorrect1/60
 df$dual_total <- df$d_kefs_totalcorrect/df$Duration..s.
 df$dual_first_interval <- df$d_kefs_1_15_2/15
 
-write.csv(df, "dkefs_crr_0314.csv", row.names = F)
+write.csv(df, "dkefs_crr_0322.csv", row.names = F)

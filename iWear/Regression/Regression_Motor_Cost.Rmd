@@ -1,0 +1,49 @@
+---
+title: "Regression - Motor Cost"
+output: pdf_document
+---
+
+```{r}
+# iWear
+iwear <- read.csv("../../iWear/iWear_complete_0322.csv")
+fields_iwear <- colnames(iwear)
+grep("age", fields_iwear) # 11
+grep("TMS", fields_iwear) # 268
+grep("TFC", fields_iwear) # 279
+grep("FA", fields_iwear) # 306
+grep("whodas_score", fields_iwear) # 74
+grep("composite_score", fields_iwear) # 521
+iwear2 <- iwear[,c(1,11,268,279,306,74,521)]
+
+# Motor Cost
+dte <- read.csv("../../Dual Task/DTE_0322.csv")
+fields_dte <- colnames(dte)
+grep("motor_faeofs_dte", fields_dte) # 16
+grep("motor_tug_dte", fields_dte) # 52
+grep("motor_dkefs_dte", fields_dte) # 49
+dte2 <- dte[,c(1,16,52,49)]
+
+# merge
+df <- merge(iwear2, dte2, sort = F)
+```
+
+# Feet Apart
+motor_faeofs_dte <- -100 * (FAEOFirmStroop.Sway.Area - FAEOFirm.Sway.Area)/FAEOFirm.Sway.Area
+```{r}
+mod1 <- lm(motor_faeofs_dte ~., data = df[,-c(1,9,10)])
+summary(mod1)
+```
+
+# TUG 
+motor_tug_dte <- -100 * (TUG.with.Cognitive.Duration - TUG.Duration)/TUG.Duration 
+```{r}
+mod2 <- lm(motor_tug_dte ~., data = df[,-c(1,8,10)])
+summary(mod2)
+```
+
+# Walking using DKEFS
+motor_dkefs_dte <- -100 * (DKEFS.Duration - Walk.Duration)/Walk.Duration 
+```{r}
+mod3 <- lm(motor_dkefs_dte ~., data = df[,-c(1,8,9)])
+summary(mod3)
+```

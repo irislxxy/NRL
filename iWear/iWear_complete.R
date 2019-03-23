@@ -5,7 +5,7 @@ library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
 # replace blank/N/ N/A /none with NA
-df <- read.csv("HDIWear_DATA_2018-10-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2019-03-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 df[df == "N" | df == "N/A" | df == "none"] <- NA
 fields <- colnames(df)
 
@@ -356,6 +356,10 @@ colnames(met_post) <- c("id","Total")
 ipaq_score_post <- met_post$Total[match(df$as_correct,met_post$id)]
 df <- add_column(df, ipaq_score_post, .after="ipaq_short_last_7_days_telephone_post_complete")
 
+# ad composite_score column
+iwear_composite <- read.csv("composite_score_norms.csv")
+df$composite_score <- iwear_composite$composite_score[match(df$as_correct,iwear_composite$as_correct)]
+
 # add step_count column
 iwear_step <- read.xlsx("iwear_step_summary_29012018.xlsx", 1)
 df$step_count <- iwear_step$step_count[match(df$as_correct,iwear_step$PID)]
@@ -371,4 +375,4 @@ df <- df[,-complete]
 # delete redcap_survey_identifier column
 df <- df[,-3]
 
-write.csv(df, "iWear_complete_0313.csv", row.names=F)
+write.csv(df, "iWear_complete_0322.csv", row.names=F)

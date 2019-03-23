@@ -11,8 +11,8 @@ library(leaps)
 
 ```{r}
 # iWear - Step Count
-iwear <- read.csv("../../iWear/iWear_complete_0313.csv")
-df_sc <- iwear[c(1,521)]
+iwear <- read.csv("../../iWear/iWear_complete_0322.csv")
+df_sc <- iwear[c(1,522)]
 
 # Feet Apart - Jerk / Sway Area
 apdm_faeofs <- read.csv("../../APDM/FAEOFirm.csv", stringsAsFactors=FALSE)
