@@ -1,0 +1,189 @@
+---
+title: "IPD"
+output: pdf_document
+---
+
+```{r}
+df <- read.csv("datasets/imp_1.csv")
+```
+
+## Density Plot
+```{r}
+library(ggplot2)
+ggplot(df, aes(x=modmotscpost, colour=Group)) + geom_density()
+```
+
+## Pre-Processing & Functions
+```{r}
+# Group: 1-intervention 2-control
+# df$Group <- as.integer(df$Group)
+index <- c(0,1)
+values <- c("control", "intervention")
+df$Group <- index[match(df$Group, values)]
+
+# Gender: 1-female 2-male
+# df$Gender <- as.integer(df$Gender)
+index <- c(0,1)
+values <- c("female", "male")
+df$Gender <- index[match(df$Gender, values)]
+```
+
+```{r}
+ovlp <- function(trt, lps)
+{
+  ## This function displays an overlap histogram for "lps" across "trt" groups
+  ## Statistical test of mean difference
+  tt <- t.test(x = lps[trt==1], y = lps[trt==0], alternative = "two.sided",
+               var.equal = FALSE)$p.value
+  ## Statistical test of difference in distribution
+  ks <- ks.test(x = lps[trt==1], y = lps[trt==0], alternative = "two.sided")$p.value
+  
+  par(mfrow = c(2,1))
+  rc <- range(lps)
+  brks <- seq(from = rc[1] - diff(rc)/20, to = rc[2] + diff(rc)/20, by = diff(rc)/20)
+  hist(lps[trt==1], breaks = brks, xlab = "", main = "Treated Cases",
+       freq = FALSE)
+  d1 <- density(lps[trt==1])
+  lines(d1, col = 2, lwd = 1, lty = 1)
+  abline(v = c(range(lps[trt==1])), col = 3, lty = 2)
+  hist(lps[trt==0], breaks = brks, xlab = "", main = "Control Cases",
+       freq = FALSE)
+  d2 <- density(lps[trt==0])
+  lines(d2, col = 2, lwd = 1, lty = 1)
+  abline(v = c(range(lps[trt==0])), col = 3, lty = 2)
+  par(mfrow = c(1,1))
+}
+
+## Note that ovlp_ind requires that package optmatch be loaded
+ovlp_ind <- function(trt, lps, caliper = 0.1)
+{
+  nt <- sum(trt == 1); nc <- sum(trt == 0)
+  SDpool <- sqrt( ( (nt - 1)*var(lps[trt == 1]) + (nc - 1)*var(lps[trt == 0]) ) / 
+                    (nt + nc - 2) )
+  ## Get abs(distance) for each treat/control pairing
+  diffs <- match_on(trt ~ lps, method = "euclidean")
+  smds <- diffs/SDpool # standardize differences by dividing by pooled SD
+  fun <- function(vec) {min(vec) <= caliper}
+  trtOvlp <- apply(smds, 1, fun)   # TRUEs are overlapping
+  ctrlOvlp <- apply(smds, 2, fun)  # FALSEs are not
+  drop1 <- which(trt==1)[!trtOvlp]
+  drop0 <- which(trt==0)[!ctrlOvlp]
+  ind <- !logical(length(lps))
+  ind[c(drop1, drop0)] <- FALSE
+  ind
+}
+```
+
+## Simple Difference in Means
+First, we check the normality of the data.
+```{r}
+shapiro.test(df$modmotscpost)
+```
+For the p-value is larger than 0.05, we fail to reject H0, that is the distribution of the data are not significantly different from normal distribution. In other words, we can assume the normality.
+
+Then, we use Bartlett’s test to check homogeneity of variances.
+```{r}
+bartlett.test(modmotscpost ~ Group, data = df)
+```
+For the p-value is larger than 0.05, we fail to reject H0, that is the variance in modmotscpost is not significantly different between groups.
+
+Finally, we perform the t-test to obtain p-value and confidence interval.
+```{r}
+pfe <- t.test(x = with(df, modmotscpost[Group == 0]),
+              y = with(df, modmotscpost[Group == 1]),
+              var.equal = TRUE,
+              conf.int = TRUE)
+diff(pfe$estimate)
+pfe$conf.int
+pfe$p.value
+```
+
+## Propensity Scores 
+```{r}
+## Estimate propensity scores with logistic regression
+glm1 <- glm(Group ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre,
+            data = df, family = "binomial")
+ps1 <- predict(glm1, type = "response")
+lin_ps1 <- log(ps1/(1 - ps1))
+
+## Assess overlap
+ovlp(trt = df$Group, lps = lin_ps1)
+```
+
+### .2 caliper
+```{r}
+## Create overlap indicator
+library(optmatch)
+library(survival)
+ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .2) # requires optmatch
+sum(ovlp_ind1)
+table(ovlp_ind1, df$Group)
+
+## Solve margin error
+par(mar=c(1,1,1,1))
+
+## Examine overlap after eliminating non-overlapping cases
+ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+```
+
+### .25 caliper
+```{r}
+## Create overlap indicator
+library(optmatch)
+library(survival)
+ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .25) # requires optmatch
+sum(ovlp_ind1)
+table(ovlp_ind1, df$Group)
+
+## Solve margin error
+par(mar=c(1,1,1,1))
+
+## Examine overlap after eliminating non-overlapping cases
+ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+```
+
+### .3 caliper
+```{r}
+## Create overlap indicator
+library(optmatch)
+library(survival)
+ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .3) # requires optmatch
+sum(ovlp_ind1)
+table(ovlp_ind1, df$Group)
+
+## Solve margin error
+par(mar=c(1,1,1,1))
+
+## Examine overlap after eliminating non-overlapping cases
+ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+```
+
+## Regression Estimation
+```{r}
+dat <- df[,-c(1:3,13)]
+
+## Create a data subset for group 1 - intervention
+dat1 <- subset(dat, subset = dat$Group == 1)
+dim(dat1)
+
+## Create a data subset for group 0 - control
+dat0 <- subset(dat, subset = dat$Group == 0)
+dim(dat0)
+
+## Regression model for group 1 
+lmY1 <- lm(modmotscpost ~ . - Group, data = dat1)
+summary(lmY1)
+
+## Regression model for group 0
+lmY0 <- lm(modmotscpost ~ . - Group, data = dat0)
+summary(lmY0)
+
+## ATE
+Y1hats <- predict(lmY1, newdata = df)
+Y0hats <- predict(lmY0, newdata = df)
+(ATE_RE <- mean(Y1hats - Y0hats))
+
+## ATT
+Y0hatsATT <- predict(lmY0, newdata = dat1)
+(ATT_RE <- mean(dat1$modmotscpost - Y0hatsATT))
+```
