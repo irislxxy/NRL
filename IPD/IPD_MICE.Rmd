@@ -3,20 +3,67 @@ title: "IPD_MICE"
 output: pdf_document
 ---
 
-```{r}
+```{r, message = FALSE, warning = FALSE}
 library(mice)
-load("imp100.Rdata")
+library(VIM)
+library(optmatch)
+library(survival)
 ```
 
-## Pre-Processing & Functions
 ```{r}
+ipd <- read.csv("IPD.csv")
+v.list <- c("PID","Study","Site","Group",
+            "Age","Gender",
+            "modmotscpre","modmotscpost",
+            "EQ5Dpre",
+            "TFC",
+            "UHDRStV1",
+            "SDMTpre")
+df <- ipd[,v.list]
+```
+
+# use mice for looking at missing data pattern
+```{r}
+df_mice <- df[,-c(1:6)]
+md.pattern(df_mice)
+aggr_plot <- aggr(df_mice, col=c('navyblue','red'), 
+                  numbers=TRUE, sortVars=TRUE, 
+                  labels=names(df_mice), cex.axis=0.7, cex.numbers=0.7, 
+                  gap=3, 
+                  ylab=c("Histogram of missing data","Pattern"))
+
+# exclude participants with missing outcome data
+df2 <- df[!is.na(df$modmotscpost),]
+df_mice2 <- df2[,-c(1:6)]
+md.pattern(df_mice2)
+aggr_plot2 <- aggr(df_mice2, col=c('navyblue','red'),
+                   numbers=TRUE, sortVars=TRUE, 
+                   ylabs=c("Histogram of missing data","Pattern"),
+                   labels=names(df_mice),
+                   cex.axis=0.7, cex.numbers=0.7, gap=3)
+```
+
+# impute the missing data
+```{r}
+load("imp100.Rdata")
+# imp100 <- mice(df2, 
+#                method='pmm',
+#                m=100, 
+#                maxit=10, 
+#                seed=2019) 
+# summary(imp100)
+```
+
+# propensity score
+## functions
+```{r}
+# This function displays an overlap histogram for "lps" across "trt" groups
 ovlp <- function(trt, lps)
 {
-  ## This function displays an overlap histogram for "lps" across "trt" groups
-  ## Statistical test of mean difference
+  # statistical test of difference in mean
   tt <- t.test(x = lps[trt==1], y = lps[trt==0], alternative = "two.sided",
                var.equal = FALSE)$p.value
-  ## Statistical test of difference in distribution
+  # statistical test of difference in distribution
   ks <- ks.test(x = lps[trt==1], y = lps[trt==0], alternative = "two.sided")$p.value
   
   par(mfrow = c(2,1))
@@ -35,18 +82,18 @@ ovlp <- function(trt, lps)
   par(mfrow = c(1,1))
 }
 
-## Note that ovlp_ind requires that package optmatch be loaded
+# Note that ovlp_ind requires that package optmatch be loaded
 ovlp_ind <- function(trt, lps, caliper = 0.1)
 {
   nt <- sum(trt == 1); nc <- sum(trt == 0)
   SDpool <- sqrt( ( (nt - 1)*var(lps[trt == 1]) + (nc - 1)*var(lps[trt == 0]) ) / 
                     (nt + nc - 2) )
-  ## Get abs(distance) for each treat/control pairing
+  # get abs(distance) for each treat/control pairing
   diffs <- match_on(trt ~ lps, method = "euclidean")
   smds <- diffs/SDpool # standardize differences by dividing by pooled SD
   fun <- function(vec) {min(vec) <= caliper}
-  trtOvlp <- apply(smds, 1, fun)   # TRUEs are overlapping
-  ctrlOvlp <- apply(smds, 2, fun)  # FALSEs are not
+  trtOvlp <- apply(smds, 1, fun)   ## TRUEs are overlapping
+  ctrlOvlp <- apply(smds, 2, fun)  ## FALSEs are not
   drop1 <- which(trt==1)[!trtOvlp]
   drop0 <- which(trt==0)[!ctrlOvlp]
   ind <- !logical(length(lps))
@@ -55,111 +102,123 @@ ovlp_ind <- function(trt, lps, caliper = 0.1)
 }
 ```
 
-## Propensity Scores 
+## pooled predictions of logistic regression
 ```{r}
-fit <- with(imp100, glm(Group ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, family = "binomial"))
-summary(pool(fit))
+prediction <- data.frame()
+for (i in 1:100){
+  imp <- complete(imp100,i)
+  glm <- glm(Group ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre,
+             data = imp, family = "binomial")
+  p <- predict(glm, type = "response")
+  prediction <- rbind(prediction, p)
+}
+prediction <- data.frame(t(prediction))
+rownames(prediction) <- df2$PID
 
-# Create a model by copying one of the fitted models
-glm <- fit$analyses[[1]]
-# Replace the fitted coefficients with the pooled estimates 
-glm$coefficients = summary(pool(fit))$estimate
-
+ps <- rowMeans(prediction)
+lin_ps <- log(ps/(1 - ps))
 ```
 
-
+## assess overlap
 ```{r}
-# Estimate propensity scores with logistic regression
-fit <- with(imp100, glm(Group ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, family = "binomial"))
-summary(pool(fit))
+# group: 0-control 1-intervention
+index <- c(0,1)
+values <- c("control", "intervention")
+group <- index[match(df2$Group, values)]
 
-## Create a model by copying one of the fitted models
-glm <- fit$analyses[[1]]
-## Replace the fitted coefficients with the pooled estimates 
-glm$coefficients = summary(pool(fit))$estimate
-
-
-ps1 <- predict(glm, type = "response")
-lin_ps1 <- log(ps1/(1 - ps1))
-
-## Assess overlap
-ovlp(trt = df$Group, lps = lin_ps1)
+ovlp(trt = group, lps = lin_ps)
 ```
 
 ### .2 caliper
 ```{r}
-## Create overlap indicator
-library(optmatch)
-library(survival)
-ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .2) # requires optmatch
+# create overlap indicator
+ovlp_ind1 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .2) 
 sum(ovlp_ind1)
-table(ovlp_ind1, df$Group)
+table(ovlp_ind1, group)
 
-## Solve margin error
+# solve margin error
 par(mar=c(1,1,1,1))
 
-## Examine overlap after eliminating non-overlapping cases
-ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+# examine overlap after eliminating non-overlapping cases
+ovlp(trt = group[ovlp_ind1], lps = lin_ps[ovlp_ind1])
 ```
 
 ### .25 caliper
 ```{r}
-## Create overlap indicator
-library(optmatch)
-library(survival)
-ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .25) # requires optmatch
-sum(ovlp_ind1)
-table(ovlp_ind1, df$Group)
+# create overlap indicator
+ovlp_ind2 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .25) 
+sum(ovlp_ind2)
+table(ovlp_ind2, group)
 
-## Solve margin error
+# solve margin error
 par(mar=c(1,1,1,1))
 
-## Examine overlap after eliminating non-overlapping cases
-ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+# examine overlap after eliminating non-overlapping cases
+ovlp(trt = group[ovlp_ind2], lps = lin_ps[ovlp_ind2])
 ```
 
 ### .3 caliper
 ```{r}
-## Create overlap indicator
-library(optmatch)
-library(survival)
-ovlp_ind1 <- ovlp_ind(trt = df$Group, lps = lin_ps1, caliper = .3) # requires optmatch
-sum(ovlp_ind1)
-table(ovlp_ind1, df$Group)
+# create overlap indicator
+ovlp_ind3 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .3) 
+sum(ovlp_ind3)
+table(ovlp_ind3, group)
 
-## Solve margin error
+# solve margin error
 par(mar=c(1,1,1,1))
 
-## Examine overlap after eliminating non-overlapping cases
-ovlp(trt = df$Group[ovlp_ind1], lps = lin_ps1[ovlp_ind1])
+# examine overlap after eliminating non-overlapping cases
+ovlp(trt = group[ovlp_ind3], lps = lin_ps[ovlp_ind3])
 ```
 
-## Regression Estimation
+# regression estimation
+## pooled predictions of linear regression
 ```{r}
-dat <- df[,-c(1:3,13)]
+prediction_Y1hats <- data.frame()
+prediction_Y0hats <- data.frame()
+prediction_Y0hatsATT <- data.frame()
 
-## Create a data subset for group 1 - intervention
-dat1 <- subset(dat, subset = dat$Group == 1)
-dim(dat1)
+for (i in 1:100){
+  imp <- complete(imp100,i)
+  # create a data subset for group intervention
+  dat1 <- subset(imp, subset = Group == "intervention")
+  # create a data subset for group control
+  dat0 <- subset(imp, subset = Group == "control")
+  
+  # regression model
+  lmY1 <- lm(modmotscpost ~  Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, 
+             data = dat1)
+  lmY0 <- lm(modmotscpost ~  Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, 
+             data = dat0)
+  
+  # ATE
+  p_Y1hats <- predict(lmY1, newdata = imp)
+  p_Y0hats <- predict(lmY0, newdata = imp)
+  prediction_Y1hats <- rbind(prediction_Y1hats, p_Y1hats)
+  prediction_Y0hats <- rbind(prediction_Y0hats, p_Y0hats)
+  
+  # ATT
+  p_Y0hatsATT <- predict(lmY0, newdata = dat1)
+  prediction_Y0hatsATT <- rbind(prediction_Y0hatsATT, p_Y0hatsATT)
+}
 
-## Create a data subset for group 0 - control
-dat0 <- subset(dat, subset = dat$Group == 0)
-dim(dat0)
+prediction_Y1hats <- data.frame(t(prediction_Y1hats))
+rownames(prediction_Y1hats) <- df2$PID
 
-## Regression model for group 1 
-lmY1 <- lm(modmotscpost ~ . - Group, data = dat1)
-summary(lmY1)
+prediction_Y0hats <- data.frame(t(prediction_Y0hats))
+rownames(prediction_Y0hats) <- df2$PID
 
-## Regression model for group 0
-lmY0 <- lm(modmotscpost ~ . - Group, data = dat0)
-summary(lmY0)
+prediction_Y0hatsATT <- data.frame(t(prediction_Y0hatsATT))
+rownames(prediction_Y0hatsATT) <- dat1$PID
+```
 
-## ATE
-Y1hats <- predict(lmY1, newdata = df)
-Y0hats <- predict(lmY0, newdata = df)
+```{r}
+# ATE
+Y1hats <- rowMeans(prediction_Y1hats)
+Y0hats <- rowMeans(prediction_Y0hats)
 (ATE_RE <- mean(Y1hats - Y0hats))
 
-## ATT
-Y0hatsATT <- predict(lmY0, newdata = dat1)
+# ATT
+Y0hatsATT <- rowMeans(prediction_Y0hatsATT)
 (ATT_RE <- mean(dat1$modmotscpost - Y0hatsATT))
 ```

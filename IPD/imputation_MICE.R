@@ -12,7 +12,7 @@ v.list <- c("PID","Study","Site","Group",
             "SDMTpre")
 df <- ipd[,v.list]
 
-# count missing data
+# count the missing data
 na.count <- sapply(df, function(x) sum((is.na(x))))
 na.count
 
