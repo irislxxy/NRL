@@ -1,0 +1,38 @@
+---
+title: "Jerk vs TMS/TFC"
+output: pdf_document
+---
+
+```{r}
+# iWear
+iwear <- read.csv("../iWear_complete_0322.csv")
+df_score <- iwear[c(1,8,268,279)]
+
+# APDM
+apdm <- read.csv("../../APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
+apdm$X[1:20] <- paste0("IW", substr(apdm$X[1:20],3,4), "GHI")
+df_sway <- apdm[c(1,12)]
+colnames(df_sway)[1] <- "as_correct"
+
+# merge
+df <- merge(df_score, df_sway, sort = F) # 49 participants - 20GHI + 29TC (no IW5TCCO)
+## remove control group
+df <- na.omit(df) # 33 partcipants - IW11TC/IW13GHI no TMS
+
+# plot
+library(ggplot2)
+
+## TMS
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Jerk..m.2.s.5., y = TMS)) +
+  labs(title = "Jerk vs TMS",
+       subtitle = cor(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$TMS),
+       x = "Jerk (m^2/s^5)", y = "TMS")
+
+## TFC
+ggplot(df) +
+  geom_point(aes(x = Postural.Sway...Acc...Jerk..m.2.s.5., y = TFC)) +
+  labs(title = "Jerk vs TFC",
+       subtitle = cor(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$TFC),
+       x = "Jerk (m^2/s^5)", y = "TFC")
+```
