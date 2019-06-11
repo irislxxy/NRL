@@ -1,19 +1,24 @@
 ---
-title: "iWEAR Falls and Lifespace Analyses"
-output: pdf_document
+title: "iWear Falls and Lifespace Analyses"
+output: 
+  pdf_document:
+    toc: true
 ---
 
+\newpage
+
 ```{r}
+library(knitr)
 library(ggplot2)
-df <- read.csv("iWear_complete_0322.csv")
+df <- read.csv("iWear_complete_0610.csv")
 fields <- colnames(df)
 ```
 
-# 1. Falls- Descriptive Analysis (History of Falls Questionnaire- hfq)
+# 1. Falls - Descriptive Analysis (History of Falls Questionnaire)
 ## Number of fallers (hfq_2)
 ```{r}
 # grep("hfq_2",fields) # 83
-df[,c(1,83)]
+sum(df$hfq_2, na.rm = T)
 ```
 
 ## Number of falls (hfq_2_yes, mean, median, min, max)
@@ -21,85 +26,120 @@ df[,c(1,83)]
 summary(df$hfq_2_yes)
 ```
 
-## Description of most common activity at the time of fall (hfq_3; frequency distribution)
+## Description of most common activity at the time of fall (hfq_3, frequency distribution)
 ```{r}
 # table(df$hfq_3)
-data.frame(c(1,14,1,2,2,1,8),row.names = c("running","walking","standing",
-                                           "getting in/out of bed, chair wheelchair, car",
-                                           "climbing on/off chair, stool, ladder",
-                                           "participating in sports/exercising, dancing/riding a bicycle",
-                                           "other"))
+df_hfq_3 <- data.frame(c(1,14,1,2,2,1,8),
+                       row.names = c("running","walking","standing",
+                                     "getting in/out of bed, chair wheelchair, car",
+                                     "climbing on/off chair, stool, ladder",
+                                     "participating in sports/exercising, dancing/riding a bicycle",
+                                     "other"))
+colnames(df_hfq_3) <- "frequency"
+kable(df_hfq_3)
 ```
 
-## Cause of fall (hfq_4; frequency distribution)
+## Cause of fall (hfq_4, frequency distribution)
 ```{r}
 # grep("hfq_4___1",fields) # 87
-colSums(df[,c(87:107)], na.rm = T) 
+df_hfq_4 <- data.frame(colSums(df[,c(87:107)], na.rm = T))
+rownames(df_hfq_4) <- c("legs gave way", "dizzy", "light-headed", 
+                        "weak", "passed out", "loss of balance", 
+                        "paralysis weakness", "quick movement",  
+                        "dual task motor (carrying an object)",
+                        "dual task cognitive (ie. walking while talking)",
+                        "tripped stumbled", "slipped", "missed seat",
+                        "was bumped/pushed", "slid off surface", "bumped into object",
+                        "furniture/equipment broke", "physical fatigue", "mental fatigue",
+                        "uncertain", "other")
+colnames(df_hfq_4) <- "frequency"
+kable(df_hfq_4)
 ```
 
-## Location of fall (hfq_5; frequency distribution)
+## Location of fall (hfq_5, frequency distribution)
 ```{r}
 # table(df$hfq_5)
-data.frame(c(15,2,12),row.names = c("inside home","inside another building","outside"))
+df_hfq_5 <- data.frame(c(15,2,12),
+                       row.names = c("inside home","inside another building","outside"))
+colnames(df_hfq_5) <- "frequency"
+kable(df_hfq_5)
 ```
 
-## Contribution of environmental hazards (hfq_6; number/percentage of participants)
+## Contribution of environmental hazards (hfq_6, number/percentage of participants)
 ```{r}
 # number
 sum(df$hfq_6, na.rm = T)
 # percentage
-sum(df$hfq_6, na.rm = T)/sum(!is.na(df$hfq_6)) # 29
+sum(df$hfq_6, na.rm = T)/sum(df$hfq_2, na.rm = T) 
 ```
 
-## Which environmental hazards contributed to falls (hfq_6_specify; frequency distribution)
+## Which environmental hazards contributed to falls (hfq_6_specify, frequency distribution)
 ```{r}
 # grep("hfq_6_specify___1",fields) # 111 - 125
-colSums(df[,c(111:125)], na.rm = T) 
+df_hfq_6 <- data.frame(colSums(df[,c(111:125)], na.rm = T))
+rownames(df_hfq_6) <- c("icy surface", "slipper/wet surface", "uneven surface",
+                        "objects on surface (stones, toys, cords)",
+                        "surface color was not different to show change in level",
+                        "rug (tripped, slid on it)", 
+                        "steps of unequal height",
+                        "darkness/dimness of environment",
+                        "glare from lights of snow",
+                        "furniture/stair step/ railing broke",
+                        "stocking/ socks slippery",
+                        "something moved and bumped me",
+                        "new eyeglasses",
+                        "other", "uncertain")
+colnames(df_hfq_6) <- "frequency"
+kable(df_hfq_6)
 ```
 
-## Required help after fall (hfq_8; number/percentage of fallers hfq_2)
+## Required help after fall (hfq_8, number/percentage of fallers hfq_2)
 ```{r}
 # number
 sum(df$hfq_8, na.rm = T)
 # percentage
-sum(df$hfq_8, na.rm = T)/sum(!is.na(df$hfq_8)) # 28
+sum(df$hfq_8, na.rm = T)/sum(df$hfq_2, na.rm = T) 
 ```
 
-## Injury after fall (hfq_9; number/percentage of fallers hfq_2)
+## Injury after fall (hfq_9, number/percentage of fallers hfq_2)
 ```{r}
 # number
 sum(df$hfq_9, na.rm = T)
 # percentage
-sum(df$hfq_9, na.rm = T)/sum(!is.na(df$hfq_9)) # 29
+sum(df$hfq_9, na.rm = T)/sum(df$hfq_2, na.rm = T) 
 ```
 
-## Recovery after fall (hfq_13_yes; mean, median, min, max days)
+## Recovery after fall (hfq_13_yes, mean, median, min, max days)
 ```{r}
 summary(df$hfq_13_yes)
 ```
 
-## Most serious injury after fall (hfq_15a; frequency distribution)
+## Most serious injury after fall (hfq_15a, frequency distribution)
 ```{r}
 # table(df$hfq_15a)
-data.frame(c(4,12,1,2),row.names = c("cut, laceration",
-                                     "bruise or hematoma",
-                                     "sprain or strain",
-                                     "fracture"))
+df_hfq_15a <- data.frame(c(4,12,1,2),
+                         row.names = c("cut, laceration",
+                                       "bruise or hematoma",
+                                       "sprain or strain",
+                                       "fracture"))
+colnames(df_hfq_15a) <- "frequency"
+kable(df_hfq_15a)
 ```
 
-## Location of most serious injury (hfq_15b; frequency distribution)
+## Location of most serious injury (hfq_15b, frequency distribution)
 ```{r}
 # table(df$hfq_15b)
-data.frame(c(5,1,1,3,1,1,1,1,1,1,1),
-           row.names = c("head","face",
-                         "upper arm","elbow","lower arm",
-                         "hand","back",
-                         "knee","lower leg",
-                         "ankle","other"))
+df_hfq_15b <- data.frame(c(5,1,1,3,1,1,1,1,1,1,1),
+                         row.names = c("head", "face", "upper arm",
+                                       "elbow", "lower arm", "hand","back",
+                                       "knee", "lower leg", "ankle",
+                                       "other"))
+colnames(df_hfq_15b) <- "frequency"
+kable(df_hfq_15b)
 ```
 
-# 2. Falls- Association with motor and cognitive function (UHDRS)
-## Correlation of number of falls (hfq_2_yes) with UHDRS total motor score (TMS)
+# 2. Falls - Association with Motor and Cognitive Function
+## Correlation of number of falls with UHDRS total motor score (TMS)
 ```{r}
 temp <- df[,c("hfq_2_yes","TMS")]
 temp <- na.omit(temp) 
@@ -109,7 +149,7 @@ ggplot(temp) +
        subtitle = cor(temp$hfq_2_yes, temp$TMS))
 ```
 
-## Correlation of number of falls (hfq_2_yes) with UHDRS cognitive 
+## Correlation of number of falls with UHDRS cognitive (sdm_correct, sdm_errors)
 ```{r}
 # sdm_correct
 temp <- df[,c("hfq_2_yes","sdm_correct")]
@@ -124,73 +164,109 @@ temp <- df[,c("hfq_2_yes","sdm_errors")]
 temp <- na.omit(temp) 
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = sdm_errors)) +
-  labs(title = "Correlation of number of falls (hfq_2_yes) with sdm_errors",
+  labs(title = "Correlation of number of falls with sdm_errors",
        subtitle = cor(temp$hfq_2_yes, temp$sdm_errors))
 ```
 
-# 3. Lifespace- Association with disease severity
-## Correlation of lifespace score (ls_score) with UHDRS total motor score (TMS)
+# 3. Falls - Association with Physical Activity
+## Correlation of number of falls with total sway area 
+```{r}
+df_sway <- read.csv("../APDM/Sitting Postural Sway.csv", header=T, stringsAsFactors=FALSE)[,c(1,30)]
+colnames(df_sway) <- c("as_correct", "total_sway_area")
+df_sway$as_correct[1:20] <- paste0("IW",substr(df_sway$as_correct[1:20],3,4),"GHI")
+df <- merge(df, df_sway, all.x = T)
+
+temp <- df[,c("hfq_2_yes", "total_sway_area")]
+temp <- na.omit(temp)
+ggplot(temp) +
+  geom_point(aes(x = hfq_2_yes, y = total_sway_area)) +
+  labs(title = "Correlation of number of falls with total sway area",
+       subtitle = cor(temp$hfq_2_yes, temp$total_sway_area))
+```
+
+# 4. Falls - Regression
+```{r}
+lm_falls <- lm(hfq_2_yes ~ TMS + sdm_correct + total_sway_area + Avg_Daily_StepCount, data = df)
+summary(lm_falls)
+```
+
+# 5. Lifespace - Frequency Distribution
+```{r}
+df_ls <- data.frame(table(df$ls_score))
+colnames(df_ls) <- c("ls","frequency")
+kable(df_ls)
+```
+
+# 6. Lifespace - Association with Disease Severity
+## Correlation of lifespace score with UHDRS total motor score (TMS)
 ```{r}
 temp <- df[,c("ls_score","TMS")]
 temp <- na.omit(temp) 
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = TMS)) +
-  labs(title = "Correlation of lifespace score  with TMS",
+  labs(title = "Correlation of lifespace score with TMS",
        subtitle = cor(temp$ls_score, temp$TMS))
 ```
 
-# 4. Lifespace- Association with Balance and Physical Activity
-## Correlation of lifespace score (ls_score) with balance sub-score (balance_subscore)
+# 7. Lifespace- Association with Balance and Physical Activity
+## Correlation of lifespace score with balance subscore
 ```{r}
 temp <- df[,c("ls_score","Balance_Subscore")]
 temp <- na.omit(temp) 
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = Balance_Subscore)) +
-  labs(title = "Correlation of lifespace score with balance sub-score",
+  labs(title = "Correlation of lifespace score with balance subscore",
        subtitle = cor(temp$ls_score, temp$Balance_Subscore))
 ```
 
-## Correlation of lifespace score (ls_score) with self-reported Physical Activity (ipaq_score_post)
+## Correlation of lifespace score with self-reported physical activity (ipaq_score_post)
 ```{r}
 temp <- df[,c("ls_score","ipaq_score_post")]
 temp <- na.omit(temp) 
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = ipaq_score_post)) +
-  labs(title = "Correlation of lifespace score with ipaq_score_post",
+  labs(title = "Correlation of lifespace score with self-reported physical activity",
        subtitle = cor(temp$ls_score, temp$ipaq_score_post))
 ```
 
-## Correlation of lifespace score (ls_score) with actual Physical Activity (number of steps/METs from Geneactiv sensor)
+## Correlation of lifespace score with actual physical activity average step counts
 ```{r}
-temp <- df[,c("as_correct","ls_score","step_count")]
+temp <- df[,c("as_correct","ls_score","Avg_Daily_StepCount")]
 temp <- na.omit(temp) 
-ggplot(temp, aes(x = ls_score, y = step_count, label = as_correct)) +
+ggplot(temp, aes(x = ls_score, y = Avg_Daily_StepCount, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
-  labs(title = "Correlation of lifespace score with number of steps",
-       subtitle = cor(temp$ls_score, temp$step_count))
+  labs(title = "Correlation of lifespace score with with average step counts",
+       subtitle = cor(temp$ls_score, temp$Avg_Daily_StepCount))
 ```
 
-## Correlation of lifespace score (ls_score) with Total Sway area
+## Correlation of lifespace score with percentage of sedentary time
 ```{r}
-df_ls <- df[,c("as_correct","ls_score")]
-df_sway <- read.csv("../APDM/Sitting Postural Sway.csv", header=T, stringsAsFactors=FALSE)
-colnames(df_sway)[1] <- c("as_correct")
-df_sway$as_correct[1:20] <- paste0("IW",substr(df_sway$as_correct[1:20],3,4),"GHI")
-df_merge <- merge(df_sway, df_ls, sort = F)
-
-df_check <- df_merge[,c(1,30,35)]
-df_check
-
-temp <- na.omit(df_merge)
-ggplot(temp) +
-  geom_point(aes(x = ls_score, y = Postural.Sway...Angles...Sway.Area..degrees.2.)) +
-  labs(title = "Correlation of lifespace score with Total Sway area",
-       subtitle = cor(temp$ls_score, temp$Postural.Sway...Angles...Sway.Area..degrees.2.))
+temp <- df[,c("as_correct","ls_score","sed_perc")]
+temp <- na.omit(temp) 
+ggplot(temp, aes(x = ls_score, y = sed_perc, label = as_correct)) +
+  geom_point() +
+  geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
+  labs(title = "Correlation of lifespace score with percentage of sedentary time",
+       subtitle = cor(temp$ls_score, temp$sed_perc))
 ```
 
-# 5. Lifespace- Association with Cognitive and Behavioral Function
-## Correlation of lifespace score (ls_score) with Symbol Digit Modality Test correct score (sdm_correct)
+## Correlation of lifespace score with total sway area
+```{r}
+temp <- df[,c("ls_score","total_sway_area")]
+temp <- na.omit(temp)
+ggplot(temp) +
+  geom_point(aes(x = ls_score, y = total_sway_area)) +
+  labs(title = "Correlation of lifespace score with total sway area",
+       subtitle = cor(temp$ls_score, temp$total_sway_area))
+
+# significance level
+cor.test(temp$ls_score, temp$total_sway_area)
+```
+The p-value is 0.005826, which is less than the significance level 0.05. We can conclude that lifespace score and total sway area are significantly correlated with a correlation coefficient of -0.67.
+
+# 8. Lifespace - Association with Cognitive and Behavioral Function
+## Correlation of lifespace score with Symbol Digit Modality Test correct score 
 ```{r}
 temp <- df[,c("ls_score","sdm_correct")]
 temp <- na.omit(temp) 
@@ -200,7 +276,7 @@ ggplot(temp) +
        subtitle = cor(temp$ls_score, temp$sdm_correct))
 ```
 
-## Correlation of lifespace score (ls_score) with Symbol Digit Modality Test error score (sdm_errors)
+## Correlation of lifespace score with Symbol Digit Modality Test error score
 ```{r}
 temp <- df[,c("ls_score","sdm_errors")]
 temp <- na.omit(temp) 
@@ -210,19 +286,19 @@ ggplot(temp) +
        subtitle = cor(temp$ls_score, temp$sdm_errors))
 ```
         
-## Correlation of lifespace score (ls_score) with Verbal Fluency Test score (vf_subtotal)
+## Correlation of lifespace score  with Verbal Fluency Test score
 ```{r}
 temp <- df[,c("as_correct","ls_score","vf_subtotal")]
 temp <- na.omit(temp) 
 ggplot(temp, aes(x = ls_score, y = vf_subtotal, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
-  labs(title = "Correlation of lifespace score with Verbal Fluency Test score",
+  labs(title = "Correlation of lifespace score with vf_subtotal",
        subtitle = cor(temp$ls_score, temp$vf_subtotal))
 ```
 
-# 6. Lifespace- Association with Functional Limitations
-## Correlation of lifespace score (ls_score) with Total Functional Capacity score (TFC)
+# 9. Lifespace - Association with Functional Limitations
+## Correlation of lifespace score with Total Functional Capacity score (TFC)
 ```{r}
 temp <- df[,c("as_correct","ls_score","TFC")]
 temp <- na.omit(temp) 
@@ -233,7 +309,7 @@ ggplot(temp, aes(x = ls_score, y = TFC, label = as_correct)) +
        subtitle = cor(temp$ls_score, temp$TFC))
 ```
 
-## Correlation of lifespace score (ls_score) with Functional Assessment (FA)
+## Correlation of lifespace score with Functional Assessment (FA)
 ```{r}
 temp <- df[,c("as_correct","ls_score","FA")]
 temp <- na.omit(temp) 
@@ -242,4 +318,10 @@ ggplot(temp, aes(x = ls_score, y = FA, label = as_correct)) +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with FA",
        subtitle = cor(temp$ls_score, temp$FA))
+```
+
+# 10. Lifespace - Regression
+```{r}
+lm_ls <- lm(ls_score ~ sdm_correct + TMS + total_sway_area, data = df)
+summary(lm_ls)
 ```
