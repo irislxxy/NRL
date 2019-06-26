@@ -50,18 +50,18 @@ shapiro.test(df_mice2$UHDRStV1) ## p-value = 0.5634 normally distributed
 shapiro.test(df_mice2$SDMTpre) ## p-value = 0.0803 normally distributed
 
 # impute the missing data
-imp100 <- mice(df2, 
-               method='pmm',
-               m=100, 
-               maxit=10, 
-               seed=2019) 
-summary(imp100)
-imp100$imp$modmotscpre ## check the imputed data
-imp100$meth ## check the imputation method
-# complete(imp100,1)
+imp30 <- mice(df2,
+              method='pmm',
+              m=30, 
+              maxit=10, 
+              seed=2019) 
+summary(imp30)
+imp30$imp$modmotscpre ## check the imputed data
+imp30$meth ## check the imputation method
+# complete(imp30,1)
 
 # pool
-fit <- with(imp100, lm(modmotscpost ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre))
+fit <- with(imp30, lm(modmotscpost ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre))
 summary(pool(fit))
 
-save(imp100, file = "imp100.RData")
+save(imp30, file = "imp30.RData")
