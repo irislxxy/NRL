@@ -8,6 +8,7 @@ library(mice)
 library(VIM)
 library(optmatch)
 library(survival)
+library(rbounds) # Matching package is automatically loaded with rbounds
 ```
 
 ```{r}
@@ -45,13 +46,13 @@ aggr_plot2 <- aggr(df_mice2, col=c('navyblue','red'),
 
 # impute the missing data
 ```{r}
-load("imp100.Rdata")
-# imp100 <- mice(df2, 
-#                method='pmm',
-#                m=100, 
-#                maxit=10, 
-#                seed=2019) 
-# summary(imp100)
+load("imp30.Rdata")
+# imp30 <- mice(df2,
+#               method='pmm',
+#               m=30, 
+#               maxit=10, 
+#               seed=2019) 
+# summary(imp30)
 ```
 
 # propensity score
@@ -102,123 +103,135 @@ ovlp_ind <- function(trt, lps, caliper = 0.1)
 }
 ```
 
-## pooled predictions of logistic regression
+## propensity score matching
 ```{r}
-prediction <- data.frame()
-for (i in 1:100){
-  imp <- complete(imp100,i)
-  glm <- glm(Group ~ Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre,
+# create empty dataframe to store results of each imputed dataset
+PID <- df2$PID
+df_ps <- data.frame(PID)
+df_logit_ps <- data.frame(PID)
+df_Y1hats <- data.frame(PID)
+df_Y0hats <- data.frame(PID)
+
+PID <- df2[which(df2$Group == "intervention"),"PID"]
+df_Y0hatsATT <- data.frame(PID)
+
+# create empty list to store ATE/ATT of each imputed dataset
+ATElist <- c()
+ATTlist <- c()
+
+for (i in 1:30){
+  imp <- complete(imp30, i)
+  glm <- glm(Group ~ Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 +SDMTpre,
              data = imp, family = "binomial")
-  p <- predict(glm, type = "response")
-  prediction <- rbind(prediction, p)
+  ps <- predict(glm, type = "response")
+  logit_ps <- log(ps/(1 - ps))
+  
+  # assess overlap
+  group <- ifelse(imp$Group == "control", 0, 1) 
+  # ovlp(trt = group, lps = logit_ps)
+  
+  # examine overlap after eliminating non-overlapping cases
+  ovlp_ind1 <- ovlp_ind(trt = group, lps = logit_ps, caliper = .2) ## create overlap indicator
+  sum(ovlp_ind1)
+  table(ovlp_ind1, group)
+  # ovlp(trt = group[ovlp_ind1], lps = logit_ps[ovlp_ind1])
+  
+  # create a subset of only overlapping cases
+  imp_ovlp <- imp[ovlp_ind1,]
+  
+  # re-estimate PS using overlapping data
+  glm_ovlp <- glm(Group ~ Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 +SDMTpre,
+                  data = imp_ovlp, family = "binomial")
+  ps_ovlp <- predict(glm_ovlp, type = "response")
+  logit_ps_ovlp <- log(ps_ovlp/(1 - ps_ovlp))
+  
+  ## store results
+  temp_ps <- data.frame(imp_ovlp$PID, ps_ovlp); colnames(temp_ps) <- c("PID", i)
+  df_ps <- merge(df_ps, temp_ps, all = T)
+ 
+  temp_logit_ps <- data.frame(imp_ovlp$PID, logit_ps_ovlp); colnames(temp_logit_ps) <- c("PID", i)
+  df_logit_ps <- merge(df_logit_ps, temp_logit_ps, all = T)
+  
+  # regression estimation
+  ## create a data subset for group intervention
+  dat1 <- subset(imp_ovlp, subset = Group == "intervention")
+  ## create a data subset for group control
+  dat0 <- subset(imp_ovlp, subset = Group == "control")
+  ## regression model
+  lmY1 <- lm(modmotscpost ~  Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 +SDMTpre, 
+             data = dat1)
+  lmY0 <- lm(modmotscpost ~  Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 +SDMTpre, 
+             data = dat0)
+  ## ATE
+  Y1hats <- predict(lmY1, newdata = imp_ovlp)
+  Y0hats <- predict(lmY0, newdata = imp_ovlp)
+  ATE <- mean(Y1hats - Y0hats)
+  ATElist <- c(ATElist, ATE)
+  
+  ## ATT
+  Y0hatsATT <- predict(lmY0, newdata = dat1)
+  ATT <- mean(dat1$modmotscpost - Y0hatsATT)
+  ATTlist <- c(ATTlist, ATT)
+
+  ## store results
+  temp_Y1hats <- data.frame(imp_ovlp$PID, Y1hats); colnames(temp_Y1hats) <- c("PID", i)
+  df_Y1hats <- merge(df_Y1hats, temp_Y1hats, all = T)
+  
+  temp_Y0hats <- data.frame(imp_ovlp$PID, Y0hats); colnames(temp_Y0hats) <- c("PID", i)
+  df_Y0hats <- merge(df_Y0hats, temp_Y0hats, all = T)
+  
+  temp_Y0hatsATT <- data.frame(dat1$PID, Y0hatsATT); colnames(temp_Y0hatsATT) <- c("PID", i)
+  df_Y0hatsATT <- merge(df_Y0hatsATT, temp_Y0hatsATT, all = T)
 }
-prediction <- data.frame(t(prediction))
-rownames(prediction) <- df2$PID
-
-ps <- rowMeans(prediction)
-lin_ps <- log(ps/(1 - ps))
 ```
 
-## assess overlap
-```{r}
-# group: 0-control 1-intervention
-index <- c(0,1)
-values <- c("control", "intervention")
-group <- index[match(df2$Group, values)]
-
-ovlp(trt = group, lps = lin_ps)
-```
-
-### .2 caliper
-```{r}
-# create overlap indicator
-ovlp_ind1 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .2) 
-sum(ovlp_ind1)
-table(ovlp_ind1, group)
-
-# solve margin error
-par(mar=c(1,1,1,1))
-
-# examine overlap after eliminating non-overlapping cases
-ovlp(trt = group[ovlp_ind1], lps = lin_ps[ovlp_ind1])
-```
-
-### .25 caliper
-```{r}
-# create overlap indicator
-ovlp_ind2 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .25) 
-sum(ovlp_ind2)
-table(ovlp_ind2, group)
-
-# solve margin error
-par(mar=c(1,1,1,1))
-
-# examine overlap after eliminating non-overlapping cases
-ovlp(trt = group[ovlp_ind2], lps = lin_ps[ovlp_ind2])
-```
-
-### .3 caliper
-```{r}
-# create overlap indicator
-ovlp_ind3 <- ovlp_ind(trt = group, lps = lin_ps, caliper = .3) 
-sum(ovlp_ind3)
-table(ovlp_ind3, group)
-
-# solve margin error
-par(mar=c(1,1,1,1))
-
-# examine overlap after eliminating non-overlapping cases
-ovlp(trt = group[ovlp_ind3], lps = lin_ps[ovlp_ind3])
-```
-
-# regression estimation
 ## pooled predictions of linear regression
 ```{r}
-prediction_Y1hats <- data.frame()
-prediction_Y0hats <- data.frame()
-prediction_Y0hatsATT <- data.frame()
-
-for (i in 1:100){
-  imp <- complete(imp100,i)
-  # create a data subset for group intervention
-  dat1 <- subset(imp, subset = Group == "intervention")
-  # create a data subset for group control
-  dat0 <- subset(imp, subset = Group == "control")
-  
-  # regression model
-  lmY1 <- lm(modmotscpost ~  Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, 
-             data = dat1)
-  lmY0 <- lm(modmotscpost ~  Age + Gender + modmotscpre + EQ5Dpre + TFC + UHDRStV1 +SDMTpre, 
-             data = dat0)
-  
-  # ATE
-  p_Y1hats <- predict(lmY1, newdata = imp)
-  p_Y0hats <- predict(lmY0, newdata = imp)
-  prediction_Y1hats <- rbind(prediction_Y1hats, p_Y1hats)
-  prediction_Y0hats <- rbind(prediction_Y0hats, p_Y0hats)
-  
-  # ATT
-  p_Y0hatsATT <- predict(lmY0, newdata = dat1)
-  prediction_Y0hatsATT <- rbind(prediction_Y0hatsATT, p_Y0hatsATT)
-}
-
-prediction_Y1hats <- data.frame(t(prediction_Y1hats))
-rownames(prediction_Y1hats) <- df2$PID
-
-prediction_Y0hats <- data.frame(t(prediction_Y0hats))
-rownames(prediction_Y0hats) <- df2$PID
-
-prediction_Y0hatsATT <- data.frame(t(prediction_Y0hatsATT))
-rownames(prediction_Y0hatsATT) <- dat1$PID
-```
-
-```{r}
 # ATE
-Y1hats <- rowMeans(prediction_Y1hats)
-Y0hats <- rowMeans(prediction_Y0hats)
-(ATE_RE <- mean(Y1hats - Y0hats))
+## method 1 - average Y1hats/Y0hats of 30 imputed datasets and then calculate the ATE
+Y1hats <- rowMeans(df_Y1hats[,-1])
+Y0hats <- rowMeans(df_Y0hats[,-1])
+(ATE1 <- mean(Y1hats - Y0hats, na.rm = T))
+
+## method 2 - calculate the ATE of each imputed dataset in the previous loop
+(ATE2 <- mean(ATElist))
+t.test(ATElist, conf.level = 0.95)
+
+## method 3 - create a loop to calculate the ATE of each imputed dataset based on the Y1hats/Y0hats dataframes
+ATElist3 <- c()
+for (i in c(1:30)){
+  ATE <- mean(df_Y1hats[,i+1] - df_Y0hats[,i+1], na.rm = T)
+  ATElist3 <- c(ATElist3, ATE)
+}
+(ATE3 <- mean(ATElist3))
 
 # ATT
-Y0hatsATT <- rowMeans(prediction_Y0hatsATT)
-(ATT_RE <- mean(dat1$modmotscpost - Y0hatsATT))
+## method 1
+df_Y0hatsATT$Y0hatsATT <- rowMeans(df_Y0hatsATT[,-1])
+df_ATT <- merge(df2[which(df2$Group == "intervention"), c("PID","modmotscpost")], df_Y0hatsATT[,c(1,32)])
+(ATT1 <- mean(df_ATT$modmotscpost - df_ATT$Y0hatsATT, na.rm = T))
+
+## method 2
+(ATT2 <- mean(ATTlist))
+t.test(ATTlist, conf.level = 0.95)
+```
+
+# sensitivity analysis
+```{r}
+# use the 1st imputed dataset
+imp1 <- complete(imp30, 1)
+
+Y <- imp1$modmotscpost # the outcome of interest
+Tr <- ifelse(imp1$Group == "control", 0, 1) # the treatment of interest
+ps <- glm(Group ~ Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 +SDMTpre,
+          data = imp1, family = "binomial")
+
+# match without replacement
+Match <- Match(Y = Y, Tr = Tr, X = ps$fitted, replace = FALSE)
+
+# provide Rosenbaum’s bounds for the p-values from Wilcoxon’s signed rank test
+psens(Match, Gamma = 2, GammaInc = 0.1)
+
+# provides Rosenbaum’s bounds for the additive effect due to treatment
+hlsens(Match, Gamma = 2, GammaInc = 0.1, 0.1)
 ```

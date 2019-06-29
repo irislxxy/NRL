@@ -5,8 +5,8 @@ output: pdf_document
 
 ```{r}
 # iWear
-iwear <- read.csv("../iWear_complete_0322.csv")
-df_score <- iwear[c(1,8,268,279)]
+iwear <- read.csv("../iWear_complete_0625.csv")
+df_score <- iwear[c("as_correct", "hd_or_healthy", "TMS", "TFC")]
 
 # APDM
 apdm <- read.csv("../../APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
@@ -28,6 +28,7 @@ ggplot(df) +
   labs(title = "Jerk vs TMS",
        subtitle = cor(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$TMS),
        x = "Jerk (m^2/s^5)", y = "TMS")
+cor.test(df$Postural.Sway...Acc...Jerk..m.2.s.5., df$TMS)
 
 ## TFC
 ggplot(df) +

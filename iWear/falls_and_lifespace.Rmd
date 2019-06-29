@@ -10,7 +10,10 @@ output:
 ```{r}
 library(knitr)
 library(ggplot2)
-df <- read.csv("iWear_complete_0610.csv")
+library(car)
+library(MASS)
+library(leaps)
+df <- read.csv("iWear_complete_0625.csv")
 fields <- colnames(df)
 ```
 
@@ -169,6 +172,21 @@ ggplot(temp) +
 ```
 
 # 3. Falls - Association with Physical Activity
+## Correlation of number of falls with percentage of sedentary time
+```{r}
+temp <- df[,c("as_correct","hfq_2_yes","sed_perc")]
+temp <- na.omit(temp) 
+ggplot(temp, aes(x = hfq_2_yes, y = sed_perc, label = as_correct)) +
+  geom_point() +
+  geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
+  labs(title = "Correlation of number of falls with percentage of sedentary time",
+       subtitle = cor(temp$hfq_2_yes, temp$sed_perc))
+
+# significance level
+cor.test(temp$hfq_2_yes, temp$sed_perc)
+```
+The p-value is 0.5327, which is larger than the significance level 0.05. We can conclude that number of falls and percentage of sedentary time are not significantly correlated.
+
 ## Correlation of number of falls with total sway area 
 ```{r}
 df_sway <- read.csv("../APDM/Sitting Postural Sway.csv", header=T, stringsAsFactors=FALSE)[,c(1,30)]
@@ -177,17 +195,40 @@ df_sway$as_correct[1:20] <- paste0("IW",substr(df_sway$as_correct[1:20],3,4),"GH
 df <- merge(df, df_sway, all.x = T)
 
 temp <- df[,c("hfq_2_yes", "total_sway_area")]
-temp <- na.omit(temp)
+temp <- na.omit(temp) # n = 19
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = total_sway_area)) +
   labs(title = "Correlation of number of falls with total sway area",
        subtitle = cor(temp$hfq_2_yes, temp$total_sway_area))
+
+# significance level
+cor.test(temp$hfq_2_yes, temp$total_sway_area)
 ```
+The p-value is 0.188, which is larger than the significance level 0.05. We can conclude that number of falls and total sway area are not significantly correlated.
 
 # 4. Falls - Regression
 ```{r}
 lm_falls <- lm(hfq_2_yes ~ TMS + sdm_correct + total_sway_area + Avg_Daily_StepCount, data = df)
 summary(lm_falls)
+
+# multicollinearity
+vif(lm_falls)
+temp <- df[,c("TMS", "sdm_correct")]
+cor.test(temp$TMS, temp$sdm_correct)
+
+# stepwise selection
+step.lm_falls <- stepAIC(lm_falls, direction = "both", trace = FALSE)
+summary(step.lm_falls)
+
+# best subset selection
+temp <- df[,c("hfq_2_yes","TMS", "sdm_correct", "total_sway_area", "Avg_Daily_StepCount")]
+temp <- na.omit(temp) # n = 11
+regsubsetsObj <- regsubsets(x=temp[,c("TMS", "sdm_correct", "total_sway_area", "Avg_Daily_StepCount")],
+                            y=temp$hfq_2_yes, nbest = 2, really.big = T)
+plot(regsubsetsObj, scale = "adjr2")  
+
+# 
+cor.test(temp$hfq_2_yes, temp$total_sway_area) # significantly correlated
 ```
 
 # 5. Lifespace - Frequency Distribution
@@ -249,7 +290,11 @@ ggplot(temp, aes(x = ls_score, y = sed_perc, label = as_correct)) +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with percentage of sedentary time",
        subtitle = cor(temp$ls_score, temp$sed_perc))
+
+# significance level
+cor.test(temp$ls_score, temp$sed_perc)
 ```
+The p-value is 0.6873, which is larger than the significance level 0.05. We can conclude that number of falls and total sway area are not significantly correlated.
 
 ## Correlation of lifespace score with total sway area
 ```{r}
@@ -324,4 +369,35 @@ ggplot(temp, aes(x = ls_score, y = FA, label = as_correct)) +
 ```{r}
 lm_ls <- lm(ls_score ~ sdm_correct + TMS + total_sway_area, data = df)
 summary(lm_ls)
+
+# multicollinearity
+vif(lm_ls)
+
+# stepwise selection
+step.lm_ls <- stepAIC(lm_ls, direction = "both", trace = FALSE)
+summary(step.lm_ls)
+
+# best subset selection
+temp <- df[,c("ls_score","TMS", "sdm_correct", "total_sway_area")]
+temp <- na.omit(temp) # n = 14
+regsubsetsObj <- regsubsets(x=temp[,c("TMS", "sdm_correct", "total_sway_area")],
+                            y=temp$ls_score, nbest = 2, really.big = T)
+plot(regsubsetsObj, scale = "adjr2")  
+
+# 
+cor.test(temp$ls_score, temp$total_sway_area) # significantly correlated
 ```
+
+# 11. Correlation of Lifespace with Falls
+```{r}
+temp <- df[,c("ls_score","hfq_2_yes")]
+temp <- na.omit(temp)
+ggplot(temp) +
+  geom_point(aes(x = ls_score, y = hfq_2_yes)) +
+  labs(title = "Correlation of lifespace score with number of falls",
+       subtitle = cor(temp$ls_score, temp$hfq_2_yes))
+
+# significance level
+cor.test(temp$ls_score, temp$hfq_2_yes)
+```
+The p-value is 0.2996, which is larger than the significance level 0.05. We can conclude that lifespace score and number of falls are not significantly correlated.

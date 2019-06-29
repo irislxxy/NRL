@@ -5,15 +5,15 @@ output: pdf_document
 
 ```{r}
 # iWear
-iwear <- read.csv("../../iWear/iWear_complete_0322.csv")
+iwear <- read.csv("../../iWear/iWear_complete_0625.csv")
 fields_iwear <- colnames(iwear)
 grep("age", fields_iwear) # 11
 grep("TMS", fields_iwear) # 268
-grep("TFC", fields_iwear) # 279
-grep("FA", fields_iwear) # 306
+grep("TFC", fields_iwear) # 280
+grep("FA", fields_iwear) # 307
 grep("whodas_score", fields_iwear) # 74
-grep("composite_score", fields_iwear) # 521
-iwear2 <- iwear[,c(1,11,268,279,306,74,521)]
+grep("composite_score", fields_iwear) # 522
+iwear2 <- iwear[,c(1,11,268,280,307,74,522)]
 
 # Motor Cost
 dte <- read.csv("../../Dual Task/DTE_0322.csv")

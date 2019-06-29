@@ -37,7 +37,7 @@ whodas_temp <- grep("^who_das", fields)
 whodas_idx <- seq(whodas_temp[1]+1, whodas_temp[2]-1)
 whodas_col <- fields[whodas_idx]
 
-##whodas score
+## whodas score
 whodas_s12 <- whodas_idx[1:12]
 whodas_score <- rowSums(df[whodas_s12])
 
@@ -46,27 +46,27 @@ hfq_temp <- grep("^history_of_falls_questionnaire_pre", fields)
 hfq_idx <- seq(hfq_temp[1]+1, hfq_temp[2]-1)
 df[df$hd_or_healthy==2,hfq_idx] <- ""
 
-##1. Do you use an assistive device to walk?
+## 1. Do you use an assistive device to walk?
 hfq_1_specify_idx <- which(df$hfq_1_yes___6==0)
 df$hfq_1_specify[hfq_1_specify_idx] <- ""
 
-##2. Have you fallen in the past six months?
-##If hfq_2=0, ingore the following fields.
+## 2. Have you fallen in the past six months?
+## If hfq_2=0, ingore the following fields.
 hfq_2_no_idx <- which(df$hfq_2==0)
 hfq_2_field_idx <- seq(hfq_temp[1]+10, hfq_temp[2]-2)
 hfq_2_field <- fields[hfq_2_field_idx]
 df[hfq_2_no_idx,hfq_2_field] <- "" 
 
-##3. What were you doing at the time of your most serious fall?
+## 3. What were you doing at the time of your most serious fall?
 hfq_3_specify_idx <- which(df$hfq_3!=12)
 df$hfq_3_specify[hfq_3_specify_idx] <- "" 
 
-##4. What happened or caused you to fall on that occasion?
+## 4. What happened or caused you to fall on that occasion?
 hfq_4_specify_idx <- which(df$hfq_4___21==0)
 df$hfq_4_specify[hfq_4_specify_idx] <- ""
 
-##6. Did objects or conditions in the environment contribute to the fall
-##If hfq_6=0, ingore the following fields.
+## 6. Did objects or conditions in the environment contribute to the fall
+## If hfq_6=0, ingore the following fields.
 hfq_6_no_idx <- which(df$hfq_6==0)
 hfq_6_field_idx <- grep("hfq_6",fields)
 hfq_6_field <- fields[hfq_6_field_idx][-1]
@@ -74,27 +74,27 @@ df[hfq_6_no_idx,hfq_6_field] <- ""
 hfq_6_specify_idx <- which(df$hfq_6_specify___14==0)
 df$hfq_6_otherspecify[hfq_6_specify_idx] <- ""
 
-##7. Have you changed anything to prevent reoccurrence?
+## 7. Have you changed anything to prevent reoccurrence?
 hfq_7_specify_idx <- which(df$hfq_7==0)
 df$hfq_7_specify[hfq_7_specify_idx] <- ""
 
-##13. Have you completely recovered to the point that you feel like yourself again?
+## 13. Have you completely recovered to the point that you feel like yourself again?
 hfq_13_no_idx <- which(df$hfq_13==0)
 df$hfq_13_yes[hfq_13_no_idx] <- ""
 
-##15A. For your most serious injury, what type of injury did you suffer? 
+## 15A. For your most serious injury, what type of injury did you suffer? 
 hfq_15a_specify_idx <- which(df$hfq_15a!=6)
 df$hfq_15a_specify[hfq_15a_specify_idx] <- ""
 
-##15B. What was the location of your most serious injury? 
+## 15B. What was the location of your most serious injury? 
 hfq_15b_specify_idx <- which(df$hfq_15b!=23)
 df$hfq_15b_specify[hfq_15b_specify_idx] <- ""
 
-##17A. For your second most serious injury, what type of injury did you suffer?
+## 17A. For your second most serious injury, what type of injury did you suffer?
 hfq_17a_specify_idx <- which(df$hfq_17a!=6)
 df$hfb_17a_specify[hfq_17a_specify_idx] <- ""
 
-##17B. What was the location of your second most serious injury?
+## 17B. What was the location of your second most serious injury?
 hfq_17b_specify_idx <- which(df$hfq_17a!=23)
 df$hfq_17b_specify[hfq_17b_specify_idx] <- ""
 
@@ -109,10 +109,10 @@ ipaq_pre_idx <- seq(ipaq_pre_temp[1]+1, ipaq_pre_temp[2])
 ipaq_pre <- c("as_correct", fields[ipaq_pre_idx])
 df_ipaq_pre <- df[,ipaq_pre]
 
-##At least one value is required in the following 4 fields for question 1/3/5/7. 
-##If all the values are missing, report NA in the first field (Hours per day).
+## At least one value is required in the following 4 fields for question 1/3/5/7. 
+## If all the values are missing, report NA in the first field (Hours per day).
 
-##1. During the last 7 days, on how many days did you do vigorous physical activities?
+## 1. During the last 7 days, on how many days did you do vigorous physical activities?
 df_ipaq_pre[,c(3:6)][is.na(df_ipaq_pre[,c(3:6)])] <- ""
 for (i in which(!(df_ipaq_pre$ipaq_ts_vday %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_vdhrs"])&is.na(df[i,"ipaq_ts_vdmin"])&is.na(df[i,"ipaq_ts_vwhrs"])&is.na(df[i,"ipaq_ts_vwmin"])){
@@ -120,7 +120,7 @@ for (i in which(!(df_ipaq_pre$ipaq_ts_vday %in% c(0,8,9,NA)))){
   }
 }
 
-##3. During the last 7 days, on how many days did you do moderate physical activities?
+## 3. During the last 7 days, on how many days did you do moderate physical activities?
 df_ipaq_pre[,c(8:11)][is.na(df_ipaq_pre[,c(8:11)])] <- ""
 for (i in which(!(df_ipaq_pre$ipaq_ts_mday %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_mdhrs"])&is.na(df[i,"ipaq_ts_mdmin"])&is.na(df[i,"ipaq_ts_mwhrs"])&is.na(df[i,"ipaq_ts_mwmin"])){
@@ -128,7 +128,7 @@ for (i in which(!(df_ipaq_pre$ipaq_ts_mday %in% c(0,8,9,NA)))){
   }
 }
 
-##5. During the last 7 days, on how many days did you walk for at least 10 minutes at a time?
+## 5. During the last 7 days, on how many days did you walk for at least 10 minutes at a time?
 df_ipaq_pre[,c(13:16)][is.na(df_ipaq_pre[,c(13:16)])] <- ""
 for (i in which(!(df_ipaq_pre$ipaq_ts_wday %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_wdhrs"])&is.na(df[i,"ipaq_ts_wdmin"])&is.na(df[i,"ipaq_ts_wwhrs"])&is.na(df[i,"ipaq_ts_wwmin"])){
@@ -136,7 +136,7 @@ for (i in which(!(df_ipaq_pre$ipaq_ts_wday %in% c(0,8,9,NA)))){
   }
 }
 
-##7. During the last 7 days, how much time did you usually spend sitting on a week day?
+## 7. During the last 7 days, how much time did you usually spend sitting on a week day?
 df_ipaq_pre[,c(17:20)][is.na(df_ipaq_pre[,c(17:20)])] <- ""
 for (i in 1:nrow(df_ipaq_pre)){
   if (is.na(df[i,"ipaq_ts_sdhrs"])&is.na(df[i,"ipaq_ts_sdmin"])&is.na(df[i,"ipaq_ts_swhrs"])&is.na(df[i,"ipaq_ts_swmin"])){
@@ -144,7 +144,7 @@ for (i in 1:nrow(df_ipaq_pre)){
   }
 }
 
-##replace df with df_ipaq_pre
+## replace df with df_ipaq_pre
 df[,ipaq_pre_idx] <- df_ipaq_pre[-1]
 
 # LifeSpace for HD only (except germany) 
@@ -155,44 +155,45 @@ df[which(df$redcap_data_access_group=="germany"),ls_idx] <- ""
 ls <- c("as_correct", fields[ls_idx])
 df_ls <- df[,ls]
 
-##If ls1=0, ingore the following fields.
+## If ls1=0, ingore the following fields.
 ls1_idx <- which(df_ls$ls1==0)
 df_ls[ls1_idx,c(3:21)][is.na(df_ls[ls1_idx,c(3:21)])] <- ""
 
-##If ls2=0, ingore the following fields.
+## If ls2=0, ingore the following fields.
 ls2_idx <- which(df_ls$ls2==0)
 df_ls[ls2_idx,c(7:21)][is.na(df_ls[ls2_idx,c(7:21)])] <- ""
 
-##If ls3=0, ingore the following fields.
+## If ls3=0, ingore the following fields.
 ls3_idx <- which(df_ls$ls3==0)
 df_ls[ls3_idx,c(11:21)][is.na(df_ls[ls3_idx,c(11:21)])] <- ""
 
-##If ls4=0, ingore the following fields.
+## If ls4=0, ingore the following fields.
 ls4_idx <- which(df_ls$ls4==0)
 df_ls[ls4_idx,c(15:21)][is.na(df_ls[ls4_idx,c(15:21)])] <- ""
 
-##If ls5=0, ingore the following fields.
+## If ls5=0, ingore the following fields.
 ls5_idx <- which(df_ls$ls5==0)
 df_ls[ls5_idx,c(19:21)][is.na(df_ls[ls5_idx,c(19:21)])] <- ""
 
-##replace df with df_ls
+## replace df with df_ls
 df[,ls_idx] <- df_ls[-1]
 
 # Non-UHDRS Sitting Tasks + 2 Minute Walk Distance + Balance and Walking Cognitive Records + UHDRS
-##motor
-##IW11TC - motor_diagnostic / IW13GHI - motor_dystonia_trunk.
+## motor
+## IW11TC - motor_diagnostic / IW13GHI - motor_dystonia_trunk.
 motor <- fields[251:282]
 df_motor <- df[motor]
 df_motor[df_motor >= 98] <- NA
 TMS <- rowSums(df_motor)
 
-##uhdrs
+## uhdrs
+df$uhdrs_occupation1 <- df$uhdrs_occupation1 - 1 # fix functional capacity scale
 uhdrs <- fields[283:287]
 df_uhdrs <- df[uhdrs]
 df_uhdrs[df_uhdrs >= 98] <- NA
 TFC <- rowSums(df_uhdrs)
 
-##func
+## func
 func <- fields[289:313]
 df_func <- df[func]
 df_func[df_func >= 98] <- NA
@@ -204,10 +205,10 @@ ipaq_post_idx <- seq(ipaq_post_temp[1]+1, ipaq_post_temp[2]-1)
 ipaq_post <- c("as_correct", fields[ipaq_post_idx])
 df_ipaq_post <- df[,ipaq_post]
 
-##At least one value is required in the following 4 fields for question 1/3/5/7. 
-##If all the values are missing, report NA in the first field (Hours per day).
+## At least one value is required in the following 4 fields for question 1/3/5/7. 
+## If all the values are missing, report NA in the first field (Hours per day).
 
-##1. During the last 7 days, on how many days did you do vigorous physical activities?
+## 1. During the last 7 days, on how many days did you do vigorous physical activities?
 df_ipaq_post[,c(3:6)][is.na(df_ipaq_post[,c(3:6)])] <- ""
 for (i in which(!(df_ipaq_post$ipaq_ts_vday_post %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_vdhrs_post"])&is.na(df[i,"ipaq_ts_vdmin_post"])&is.na(df[i,"ipaq_ts_vwhrs_post"])&is.na(df[i,"ipaq_ts_vwmin_post"])){
@@ -215,7 +216,7 @@ for (i in which(!(df_ipaq_post$ipaq_ts_vday_post %in% c(0,8,9,NA)))){
   }
 }
 
-##3. During the last 7 days, on how many days did you do moderate physical activities?
+## 3. During the last 7 days, on how many days did you do moderate physical activities?
 df_ipaq_post[,c(8:11)][is.na(df_ipaq_post[,c(8:11)])] <- ""
 for (i in which(!(df_ipaq_post$ipaq_ts_mday_post %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_mdhrs_post"])&is.na(df[i,"ipaq_ts_mdmin_post"])&is.na(df[i,"ipaq_ts_mwhrs_post"])&is.na(df[i,"ipaq_ts_mwmin_post"])){
@@ -223,7 +224,7 @@ for (i in which(!(df_ipaq_post$ipaq_ts_mday_post %in% c(0,8,9,NA)))){
   }
 }
 
-##5. During the last 7 days, on how many days did you walk for at least 10 minutes at a time?
+## 5. During the last 7 days, on how many days did you walk for at least 10 minutes at a time?
 df_ipaq_post[,c(13:16)][is.na(df_ipaq_post[,c(13:16)])] <- ""
 for (i in which(!(df_ipaq_post$ipaq_ts_wday_post %in% c(0,8,9,NA)))){
   if (is.na(df[i,"ipaq_ts_wdhrs_post"])&is.na(df[i,"ipaq_ts_wdmin_post"])&is.na(df[i,"ipaq_ts_wwhrs_post"])&is.na(df[i,"ipaq_ts_wwmin_post"])){
@@ -231,7 +232,7 @@ for (i in which(!(df_ipaq_post$ipaq_ts_wday_post %in% c(0,8,9,NA)))){
   }
 }
 
-##7. During the last 7 days, how much time did you usually spend sitting on a week day?
+## 7. During the last 7 days, how much time did you usually spend sitting on a week day?
 df_ipaq_post[,c(17:20)][is.na(df_ipaq_post[,c(17:20)])] <- ""
 for (i in 1:nrow(df_ipaq_post)){
   if (is.na(df[i,"ipaq_ts_sdhrs_post"])&is.na(df[i,"ipaq_ts_sdmin_post"])&is.na(df[i,"ipaq_ts_swhrs_post"])&is.na(df[i,"ipaq_ts_swmin_post"])){
@@ -239,24 +240,24 @@ for (i in 1:nrow(df_ipaq_post)){
   }
 }
 
-##replace df with df_ipaq_post
+## replace df with df_ipaq_post
 df[,ipaq_post_idx] <- df_ipaq_post[-1]
 
 # Telephone Interview POST for everyone
-##5
+## 5
 phone_4_idx <- which(df$phone_4==0)
 df$phone_5[phone_4_idx] <- ""
 
-##8
+## 8
 phone_7_idx <- which(df$phone_7___10!=1)
 df$phone_8[phone_7_idx] <- ""
 
-##10&11
+## 10&11
 phone_9_idx <- which(df$phone_9==0)
 df$phone_10[phone_9_idx] <- ""
 df$phone_11[phone_9_idx] <- ""
 
-##13
+## 13
 df$phone_13[is.na(df$phone_13)] <- ""
 
 # History of Falls Questionnaire POST for HD only
@@ -266,24 +267,24 @@ df[df$hd_or_healthy==2,hfq_post_idx] <- ""
 hfq_post <- c("as_correct", fields[hfq_post_idx])
 df_hfq_post <- df[,hfq_post]
 
-##2
-##If hfq_2_post=0, ingore the following fields.
+## 2
+## If hfq_2_post=0, ingore the following fields.
 hfq_2_post_idx <- which(df_hfq_post$hfq_2_post==0 | is.na(df_hfq_post$hfq_2_post))
 df_hfq_post[hfq_2_post_idx,c(3:63)] <- "" 
 
-##hfq_7_changed_post
+## hfq_7_changed_post
 hfq_7_post_idx <- which(df_hfq_post$hfq_7_post==0)
 df_hfq_post$hfq_7_changed_post[hfq_7_post_idx] <- "" 
 
-##15&17
+## 15&17
 hfq_9_post_idx <- which(df_hfq_post$hfq_9_post==0)
 df_hfq_post[hfq_9_post_idx,c(55:63)] <- "" 
 
-##specify
+## specify
 specify <- grep("specify", colnames(df_hfq_post))
 df_hfq_post[,specify][is.na(df_hfq_post[,specify])] <- ""
 
-##replace df with df_hfq_post
+## replace df with df_hfq_post
 df[,hfq_post_idx] <- df_hfq_post[-1]
 
 # Falls and Trips Questionnaire for HD only
@@ -328,22 +329,27 @@ df <- add_column(df, FA, .after="func_assess_25")
 Balance_Subscore = df$motor_tandem_walking + df$motor_retropulsion
 df <- add_column(df, Balance_Subscore, .after="TMS")
 
-# add Chorea_Subscore column
-# Chorea_Subscore = Sum of Maximal Chorea Measures (i.e, Face, BOL, Trunk, RUE, LUE, RLE, LLE)  
-Chorea_Subscore = df$motor_chorea_face + df$motor_chorea_bol + df$motor_chorea_trunk +
-  df$motor_chorea_rue + df$motor_chorea_lue + df$motor_chorea_rle + df$motor_chorea_lle
-df <- add_column(df, Chorea_Subscore, .after="Balance_Subscore")
-
 # add Dystonia_Subscore column
 # Dystonia_Subscore = Sum of Maximal Dystonia and Rigidity
 Dystonia_Subscore = df$motor_dystonia_trunk + df$motor_dystonia_rue + df$motor_dystonia_lue +
   df$motor_dystonia_rle + df$motor_dystonia_lle + df$motor_rigid_arm_right + df$motor_rigid_arm_left
 df <- add_column(df, Dystonia_Subscore, .after="Balance_Subscore")
 
+# add Chorea_Subscore column
+# Chorea_Subscore = Sum of Maximal Chorea Measures (i.e, Face, BOL, Trunk, RUE, LUE, RLE, LLE)  
+Chorea_Subscore = df$motor_chorea_face + df$motor_chorea_bol + df$motor_chorea_trunk +
+  df$motor_chorea_rue + df$motor_chorea_lue + df$motor_chorea_rle + df$motor_chorea_lle
+df <- add_column(df, Chorea_Subscore, .after="Dystonia_Subscore")
+
+# add Chorea_Subscore_Trunk_UE column
+# Chorea_Subscore_Trunk_UE = Sum of Maximal Chorea Measures (i.e, Trunk, RUE, LUE)  
+Chorea_Subscore_Trunk_UE = df$motor_chorea_trunk + df$motor_chorea_rue + df$motor_chorea_lue
+df <- add_column(df, Chorea_Subscore_Trunk_UE, .after="Chorea_Subscore")
+
 # add Chorea_Eye_Subscore column
 Chorea_Eye_Subscore = df$motor_ocular_horiz + df$motor_ocular_vert + 
   df$motor_sacc_int_horiz + df$saccade_int_vert  + df$motor_sacc_veloc_horiz + df$motor_sacc_veloc_vert
-df <- add_column(df, Chorea_Eye_Subscore, .after="Chorea_Subscore")
+df <- add_column(df, Chorea_Eye_Subscore, .after="Chorea_Subscore_Trunk_UE")
 
 # add Chorea_Total_Subscore column
 Chorea_Total_Subscore = df$Chorea_Subscore + df$Chorea_Eye_Subscore
@@ -377,4 +383,4 @@ df <- df[,-complete]
 # delete redcap_survey_identifier column
 df <- df[,-3]
 
-write.csv(df, "iWear_complete_0610.csv", row.names=F)
+write.csv(df, "iWear_complete_0625.csv", row.names=F)
