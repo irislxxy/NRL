@@ -1,7 +1,7 @@
 library(tibble)
 setwd("/Users/iris/Desktop/NRL/PreActiveHD")
 
-df <- read.csv("PreActiveHD_DATA_2019-05-07_1619.csv")
+df <- read.csv("PreActiveHD_DATA_2019-08-21_0622.csv")
 df_label <- read.csv("PreActiveHD_DATA_LABELS_2019-06-28_0407.csv")
 colnames(df_label)[87:105]
 for (i in 87:105){
@@ -89,9 +89,10 @@ df <- add_column(df, eb_final_score, .after = "hd_pro_temper")
 df <- add_column(df, motor_final_score, .after = "hd_pro_phone")
 df <- add_column(df, total_score, .after = "motor_final_score")
 
-write.csv(df, "PreActiveHD_Score.csv", row.names = F)
+write.csv(df, "PreActiveHD_Score_0820.csv", row.names = F)
 
 # Calculation
+# difference
 ## PREHD 5/8/12 do not have follow up
 df_cal <- df[-c(9,14,21),]
 variableList <- c("MET",
@@ -107,11 +108,25 @@ for (i in 1:11){
     diff[i,j] <- df_cal[i*2,j] - df_cal[i*2-1,j]
   }
 }
-write.csv(diff, "PreActiveHD_Diff.csv", row.names = F)
+write.csv(diff, "PreActiveHD_Diff_0820.csv", row.names = T)
 
-for (i in variableList){
-  cat(i,"\n")
-  cat("Mean:", round(mean(diff[,i],na.rm=T),2), "\n")
-  cat("SD:", round(sd(diff[,i],na.rm=T),2), "\n")
-  cat("Confidence Interval:", t.test(diff[,i])$conf.int, "\n\n")
+cal <- function(df){
+  for (i in variableList){
+    cat(i,"\n")
+    cat("Mean:", round(mean(df[,i],na.rm=T),2), "\n")
+    cat("SD:", round(sd(df[,i],na.rm=T),2), "\n")
+    cat("Confidence Interval:", t.test(df[,i])$conf.int, "\n\n")
+  }
 }
+cal(diff)
+
+# group
+df_1 <- df[which(df$basic_assessnum == 1),]
+cal(df_1)
+
+df_2 <- df[which(df$basic_assessnum == 2),]
+cal(df_2)
+
+# MET 
+df_MET <- df[,c(1,81,idx)]
+write.csv(df_MET, "PreActiveHD_MET_0820.csv", row.names = F)

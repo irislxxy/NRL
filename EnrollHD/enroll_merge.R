@@ -1,6 +1,8 @@
 setwd("~/Desktop/NRL/EnrollHD/Raw Data")
 
 participation<- read.csv("participation.csv", sep = "\t")
+participation_sub <- participation[,c("subjid","subjstat","hdcat_0","hdcat_l","age_0",
+                                      "rfstdy","rficdy","rfendy")]
 
 profile <- read.csv("profile.csv", sep = "\t")
 profile_sub <- profile[,c("subjid","sex","caghigh","ccmtr","ccmtrage",
@@ -65,7 +67,7 @@ enroll_sub <- enroll[,c("subjid","seq",
                         # SF-12
                         "pf","rp","bp","gh", "vt","sf","re","mh","pcs","mcs")]
 
-df <- merge(enroll_sub,profile_sub)
-df2 <- df[,c(1,2,164:172,3:163)]
+df <- merge(participation_sub, profile_sub)
+df <- merge(df, enroll_sub)
 
-write.csv(df2, "../enroll.csv", row.names = F)
+write.csv(df, "../enroll_merge.csv", row.names = F)

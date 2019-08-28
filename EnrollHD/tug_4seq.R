@@ -1,5 +1,5 @@
-setwd("/Users/iris/Desktop/NRL/Enroll-HD")
-df <- read.csv("enroll.csv", stringsAsFactors=FALSE)
+setwd("/Users/iris/Desktop/NRL/EnrollHD")
+df <- read.csv("enroll_tug.csv", stringsAsFactors=FALSE)
 
 # max seq for each participant
 n <- nrow(df)
@@ -15,7 +15,7 @@ for (i in 1:(n-1)){
 
 df_seq <- as.data.frame(cbind(idList, seqList))
 colnames(df_seq) <- c("subjid","seq")
-write.csv(df_seq, "seq_max.csv", row.names = F)
+write.csv(df_seq, "tug_seq_num.csv", row.names = F)
 
 # N for each seq that have 4 variables
 df2<- df[,c("subjid","seq","tug","tug1","scst","scst1")]
@@ -34,4 +34,4 @@ id <- intersect(id, seq3)
 id <- intersect(id, seq4)
 df4 <- subset(df, (df$subjid %in% id))
 df4 <- subset(df4, (df4$seq %in% c(1:4)))
-write.csv(df4, "enroll_4seq.csv", row.names = F)
+write.csv(df4, "tug_4seq.csv", row.names = F)
