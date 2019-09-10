@@ -26,6 +26,7 @@ df <- df[which(df$hdcat_0 == 3),] # pre‐manifest/pre‐motor‐manifest HD - 2
 # Diagnosis of juvenile onset HD
 ## Q: Can I assume that age 18+ partcipants are not juvenile onset HD? 
 ## A: ONSET BEFORE AGE 20 IS CONSIDERED JHD
+df <- df[-which(df$sxsubj < 20),] # Symptoms first noted by MH participant
 
 # History of comorbid neurological conditions such as multiple sclerosis or stroke 
 # Acute (within 1 month) orthopaedic conditions e.g. ankle sprain or fracture
@@ -53,10 +54,8 @@ df <- df[which(df$hdcat_0 == 3),] # pre‐manifest/pre‐motor‐manifest HD - 2
 #Strain -- Any 
 
 comorbid <- read.csv("Raw Data/comorbid.csv", sep = "\t")
-
-#
 table <- as.data.frame(table(comorbid$subjid))
-table$Var1[which(table$Freq==66)]
+table$Var1[which(table$Freq == max(table$Freq))]
 
 condition <- comorbid$mhterm__modify
 exclude_idx <- c()
