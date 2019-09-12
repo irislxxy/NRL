@@ -1,4 +1,5 @@
 library(tibble)
+library(lsr)
 setwd("/Users/iris/Desktop/NRL/PreActiveHD/PD")
 
 # HD
@@ -37,11 +38,22 @@ df <- add_column(df, identified, .after = "introjected")
 df <- add_column(df, intrinsic, .after = "identified")
 write.csv(df, "HDPD.csv", row.names = F)
 
-# difference
+# calculation
 ## PREHD 5/8/12 & MPREPD 7 do not have follow up
 df_cal <- df[-c(9,14,21,38),]
 variableList <- c("amotivation", "external", "introjected", "identified", "intrinsic",
                   "stroop_interf_correct", "smwt_total_distance")
+
+cal <- function(df){
+  for (i in variableList){
+    cat(i,"\n")
+    cat("Mean:", round(mean(df[,i],na.rm=T),2), "\n")
+    cat("SD:", round(sd(df[,i],na.rm=T),2), "\n")
+    cat("Confidence Interval:", t.test(df[,i])$conf.int, "\n\n")
+  }
+}
+
+# diff
 participantList <- paste0("HD",c(1:4,6:7,9:11,13:14))
 participantList <- c(participantList, paste0("PD", c(1:6,8:13)))
 diff <- data.frame(row.names = participantList)
@@ -53,13 +65,20 @@ for (i in 1:23){
 }
 write.csv(diff, "HDPD_Diff.csv")
 
-cal <- function(df){
-  for (i in variableList){
-    cat(i,"\n")
-    cat("Mean:", round(mean(df[,i],na.rm=T),2), "\n")
-    cat("SD:", round(sd(df[,i],na.rm=T),2), "\n")
-    cat("Confidence Interval:", t.test(df[,i])$conf.int, "\n\n")
-    wilcox.test(df[,i], alternative="two.sided", conf.int = TRUE)
-  }
-}
 cal(diff)
+
+# group
+group <- rep(c(1,2),23)
+df_cal <- add_column(df_cal, group, .after = "participant_code")
+
+df_pre <- df_cal[which(df_cal$group == 1),]
+cal(df_pre)
+
+df_post <- df_cal[which(df_cal$group == 2),]
+cal(df_post)
+
+for (i in variableList){
+  cat(i,"\n")
+  cat("Confidence Interval:", t.test(df_pre[,i], df_post[,i], paired = TRUE)$conf.int, "\n")
+  cat("Effect Size:", cohensD(df_pre[,i], df_post[,i], method = "paired"), "\n\n")
+}
