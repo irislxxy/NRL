@@ -79,6 +79,6 @@ cal(df_post)
 
 for (i in variableList){
   cat(i,"\n")
-  cat("Confidence Interval:", t.test(df_pre[,i], df_post[,i], paired = TRUE)$conf.int, "\n")
-  cat("Effect Size:", cohensD(df_pre[,i], df_post[,i], method = "paired"), "\n\n")
+  cat("Confidence Interval:", t.test(df_post[,i], df_pre[,i], paired = TRUE)$conf.int, "\n")
+  cat("Effect Size:", cohensD(df_post[,i], df_pre[,i], method = "paired"), "\n\n")
 }

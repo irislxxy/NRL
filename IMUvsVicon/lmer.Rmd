@@ -1,0 +1,42 @@
+---
+title: "Linear Mixed-Effects Models"
+output: pdf_document
+---
+
+```{r, warning=FALSE}
+library(Matrix)
+library(lme4)
+setwd("/Users/iris/Desktop/NRL/IMUvsVicon")
+df <- read.csv("IMUvsVicon.csv", stringsAsFactors=F)
+colnames(df)
+```
+
+# Stance
+```{r}
+mixed.lmer <- lmer(Stance ~ Step_Count + System + Step_Count:System + (1|Partic_ID), data = df)
+summary(mixed.lmer)
+```
+
+# Double Support
+```{r}
+mixed.lmer <- lmer(Double_Support ~ Step_Count + System + Step_Count:System + (1|Partic_ID), data = df)
+summary(mixed.lmer)
+```
+
+# Swing
+```{r}
+mixed.lmer <- lmer(Swing ~ Step_Count + System + Step_Count:System + (1|Partic_ID), data = df)
+summary(mixed.lmer)
+```
+
+# Gait Speed
+```{r}
+mixed.lmer <- lmer(Gait_Speed ~ Step_Count + System + Step_Count:System + (1|Partic_ID), data = df)
+summary(mixed.lmer)
+```
+
+# Stride Length
+```{r}
+mixed.lmer <- lmer(Stride_Length ~ Step_Count + System + Step_Count:System + (1|Partic_ID), data = df)
+summary(mixed.lmer)
+```

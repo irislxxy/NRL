@@ -1,4 +1,5 @@
 library(tibble)
+library(lsr)
 setwd("/Users/iris/Desktop/NRL/PreActiveHD")
 
 df <- read.csv("PreActiveHD_DATA_2019-08-21_0622.csv")
@@ -75,6 +76,24 @@ motor_final_score <- (motor_a_score + motor_b_score) / rowSums(!is.na(df[,motor_
 # Total
 total_score <- cognition_final_score + eb_final_score + motor_final_score
 
+# TMS
+motor <- fields[grep("motor", fields)]
+df_motor <- df[motor]
+df_motor[df_motor >= 98] <- NA
+TMS <- rowSums(df_motor)
+
+## TFC
+uhdrs <- fields[grep("uhdrs", fields)[2:6]]
+df_uhdrs <- df[uhdrs]
+df_uhdrs[df_uhdrs >= 98] <- NA
+TFC <- rowSums(df_uhdrs)
+
+# FA
+func <- fields[248:272]
+df_func <- df[func]
+df_func[df_func >= 98] <- NA
+FA <- rowSums(df_func)
+
 # Add Column
 df <- add_column(df, MET, .after = "ipaq_long_last_7_days_self_admin_complete")
 
@@ -89,7 +108,11 @@ df <- add_column(df, eb_final_score, .after = "hd_pro_temper")
 df <- add_column(df, motor_final_score, .after = "hd_pro_phone")
 df <- add_column(df, total_score, .after = "motor_final_score")
 
-write.csv(df, "PreActiveHD_Score_0820.csv", row.names = F)
+df <- add_column(df, TMS, .after="motor_diagnostic")
+df <- add_column(df, TFC, .after="uhdrs_carelevel")
+df <- add_column(df, FA, .after="func_assess_25")
+
+write.csv(df, "PreActiveHD_Score_0920.csv", row.names = F)
 
 # Calculation
 # difference
@@ -121,11 +144,17 @@ cal <- function(df){
 cal(diff)
 
 # group
-df_1 <- df[which(df$basic_assessnum == 1),]
+df_1 <- df_cal[which(df_cal$basic_assessnum == 1),]
 cal(df_1)
 
-df_2 <- df[which(df$basic_assessnum == 2),]
+df_2 <- df_cal[which(df_cal$basic_assessnum == 2),]
 cal(df_2)
+
+# effect size
+for (i in variableList){
+  cat(i,"\n")
+  cat("Effect Size:", cohensD(df_2[,i], df_1[,i]), "\n\n")
+}
 
 # MET 
 df_MET <- df[,c(1,81,idx)]
