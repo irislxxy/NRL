@@ -1,0 +1,80 @@
+---
+title: "Mirror density chart"
+output: pdf_document
+---
+
+```{r, message = FALSE, warning = FALSE}
+library(mice)
+library(optmatch)
+library(ggplot2)
+
+source("PS_Functions.R")
+load("imp30.Rdata")
+```
+
+```{r}
+# estimate PS
+imp <- complete(imp30, 1)
+glm <- glm(Group ~ Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 + SDMTpre,
+           data = imp, family = "binomial")
+ps <- predict(glm, type = "response")
+logit_ps <- log(ps/(1 - ps))
+
+# assess overlap
+group <- ifelse(imp$Group == "control", 0, 1) 
+# ovlp(trt = group, lps = logit_ps)
+  
+# examine overlap after eliminating non-overlapping cases
+ovlp_ind1 <- ovlp_ind(trt = group, lps = logit_ps, caliper = .2) ## create overlap indicator
+sum(ovlp_ind1)
+table(ovlp_ind1, group)
+# ovlp(trt = group[ovlp_ind1], lps = logit_ps[ovlp_ind1])
+  
+# create a subset of only overlapping cases
+imp_ovlp <- imp[ovlp_ind1,]
+  
+# re-estimate PS using overlapping data
+glm_ovlp <- glm(Group ~ Age + Gender + I(modmotscpre^2) + EQ5Dpre + I(TFC^2) + UHDRStV1 + SDMTpre,
+                data = imp_ovlp, family = "binomial")
+ps_ovlp <- predict(glm_ovlp, type = "response")
+logit_ps_ovlp <- log(ps_ovlp/(1 - ps_ovlp))
+
+#
+imp$ps <- ps
+imp_ovlp$ps_ovlp <- ps_ovlp
+```
+
+# chart
+## before matching
+```{r}
+levels(imp$Group) <- c("control", "exercise exposure")
+ggplot() +
+  xlim(0, 1) +
+  # top - exercise
+  geom_density(aes(x = imp[which(imp$Group == "exercise exposure"), "ps"], 
+                   y = ..density..), fill="#69b3a2" ) +
+  geom_label(aes(x=0.875, y=2, label="exercise exposure"), color="#69b3a2") +
+  # bottom - controls
+  geom_density( aes(x = imp[which(imp$Group == "control"), "ps"], 
+                    y = -..density..), fill= "#404080") +
+  geom_label(aes(x=0.875, y=-2, label="control"), color="#404080") +
+  xlab("before matching") +
+  theme_bw()
+ggsave("density_before_matching.png")
+```
+
+## after matching
+```{r}
+levels(imp_ovlp$Group) <- c("control", "exercise exposure")
+ggplot() +
+  xlim(0, 1) +
+  # top - exercise
+  geom_density(aes(x = imp_ovlp[which(imp_ovlp$Group == "exercise exposure"), "ps_ovlp"], 
+                   y = ..density..), fill="#69b3a2" ) +
+  geom_label(aes(x=0.875, y=2, label="exercise exposure"), color="#69b3a2") +
+  # bottom - controls
+  geom_density( aes(x = imp_ovlp[which(imp_ovlp$Group == "control"), "ps_ovlp"], y = -..density..), fill= "#404080") +
+  geom_label(aes(x=0.875, y=-2, label="control"), color="#404080") +
+  xlab("after matching")
+ggsave("density_after_matching.png")
+```
