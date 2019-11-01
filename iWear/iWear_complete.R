@@ -5,7 +5,7 @@ library(tibble)
 setwd("/Users/iris/Desktop/NRL/iWear")
 
 # replace blank/N/ N/A /none with NA
-df <- read.csv("HDIWear_DATA_2019-03-22.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
+df <- read.csv("HDIWear_DATA_2019-10-30.csv", stringsAsFactors=FALSE, na.strings=c("",NA))
 df[df == "N" | df == "N/A" | df == "none"] <- NA
 fields <- colnames(df)
 
@@ -383,4 +383,10 @@ df <- df[,-complete]
 # delete redcap_survey_identifier column
 df <- df[,-3]
 
-write.csv(df, "iWear_complete_0625.csv", row.names=F)
+# exclude participants whose TFC below 7
+df <- df[-which(df$TFC < 7),]
+
+# exclude participant who walks with a cane
+df <- df[-which(df$as_correct == "IW9TCCO"),]
+
+write.csv(df, "iWear_complete_20191030.csv", row.names=F)

@@ -49,7 +49,7 @@ imp_ovlp$ps_ovlp <- ps_ovlp
 ```{r}
 levels(imp$Group) <- c("control", "exercise exposure")
 ggplot() +
-  xlim(0, 1) +
+  xlim(0, 1) + ylim(-5, 5) +
   # top - exercise
   geom_density(aes(x = imp[which(imp$Group == "exercise exposure"), "ps"], 
                    y = ..density..), fill="#69b3a2" ) +
@@ -67,7 +67,7 @@ ggsave("density_before_matching.png")
 ```{r}
 levels(imp_ovlp$Group) <- c("control", "exercise exposure")
 ggplot() +
-  xlim(0, 1) +
+  xlim(0, 1) + ylim(-5, 5) +
   # top - exercise
   geom_density(aes(x = imp_ovlp[which(imp_ovlp$Group == "exercise exposure"), "ps_ovlp"], 
                    y = ..density..), fill="#69b3a2" ) +
@@ -75,6 +75,7 @@ ggplot() +
   # bottom - controls
   geom_density( aes(x = imp_ovlp[which(imp_ovlp$Group == "control"), "ps_ovlp"], y = -..density..), fill= "#404080") +
   geom_label(aes(x=0.875, y=-2, label="control"), color="#404080") +
-  xlab("after matching")
+  xlab("after matching") +
+  theme_bw()
 ggsave("density_after_matching.png")
 ```
