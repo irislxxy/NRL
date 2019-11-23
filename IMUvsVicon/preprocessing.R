@@ -1,10 +1,10 @@
 library(readxl)
 setwd("/Users/iris/Desktop/NRL/IMUvsVicon")
-df_side <- read_excel("AffectedSide.xlsx")
+df_side <- read_excel("paretic.xlsx")
 
 df <- data.frame(Partic_ID=character(),
-                 Day=character(), 
                  System=character(),
+                 Day=character(), 
                  P_or_NP=character(),
                  Step_Count=numeric(),
                  Stance=numeric(),
@@ -13,6 +13,18 @@ df <- data.frame(Partic_ID=character(),
                  Gait_Speed=numeric(),
                  Stride_Length=numeric(),
                  stringsAsFactors=FALSE)
+
+
+df_avg <- data.frame(Partic_ID=character(),
+                     System=character(),
+                     Day=character(),
+                     P_or_NP=character(),
+                     Stance=numeric(),
+                     Double_Support=numeric(),
+                     Swing=numeric(),
+                     Gait_Speed=numeric(),
+                     Stride_Length=numeric(),
+                     stringsAsFactors=FALSE)
 
 for (i in 1:nrow(df_side)){
     id <- df_side[i,"Partic_ID"]
@@ -44,10 +56,20 @@ for (i in 1:nrow(df_side)){
       Swing <- f1[which(f1$Measure==SwingName), paste0("X",j)]
       GaitSpeed <- f1[which(f1$Measure==GaitSpeedName), paste0("X",j)]
       StrideLength <- f1[which(f1$Measure==StrideLengthName), paste0("X",j)]
-      row <- c(id,1,s,"Paretic",j,Stance,DoubleSupport,Swing,GaitSpeed,StrideLength)
+      row <- c(id,s,1,"Paretic",j,Stance,DoubleSupport,Swing,GaitSpeed,StrideLength)
       df[nrow(df)+1,] <- row
     }
     
+    df_avg[4*i-3,"Partic_ID"] <- id
+    df_avg[4*i-3,"System"] <- s
+    df_avg[4*i-3,"Day"] <- 1
+    df_avg[4*i-3,"P_or_NP"] <- "Paretic"
+    df_avg[4*i-3,"Stance"] <- f1[which(f1$Measure==StanceName), "Mean"]
+    df_avg[4*i-3,"Double_Support"] <- f1[which(f1$Measure==DoubleSupportName), "Mean"]
+    df_avg[4*i-3,"Swing"] <- f1[which(f1$Measure==SwingName), "Mean"]
+    df_avg[4*i-3,"Gait_Speed"] <- f1[which(f1$Measure==GaitSpeedName), "Mean"]
+    df_avg[4*i-3,"Stride_Length"] <- f1[which(f1$Measure==StrideLengthName), "Mean"]
+
     # Non_Paretic
     side_NP <- df_side[i,"Non_Paretic"]
     StanceName_NP <- paste("Gait - Lower Limb - Stance", side_NP, "(%GCT)")
@@ -62,9 +84,19 @@ for (i in 1:nrow(df_side)){
       Swing_NP <- f1[which(f1$Measure==SwingName_NP), paste0("X",j)]
       GaitSpeed_NP <- f1[which(f1$Measure==GaitSpeedName_NP), paste0("X",j)]
       StrideLength_NP <- f1[which(f1$Measure==StrideLengthName_NP), paste0("X",j)]
-      row <- c(id,1,s,"Non_Paretic",j,Stance_NP,DoubleSupport_NP,Swing_NP,GaitSpeed_NP,StrideLength_NP)
+      row <- c(id,s,1,"Non_Paretic",j,Stance_NP,DoubleSupport_NP,Swing_NP,GaitSpeed_NP,StrideLength_NP)
       df[nrow(df)+1,] <- row
     }
+    
+    df_avg[4*i-2,"Partic_ID"] <- id
+    df_avg[4*i-2,"System"] <- s
+    df_avg[4*i-2,"Day"] <- 1
+    df_avg[4*i-2,"P_or_NP"] <- "Non_Paretic"
+    df_avg[4*i-2,"Stance"] <- f1[which(f1$Measure==StanceName_NP), "Mean"]
+    df_avg[4*i-2,"Double_Support"] <- f1[which(f1$Measure==DoubleSupportName_NP), "Mean"]
+    df_avg[4*i-2,"Swing"] <- f1[which(f1$Measure==SwingName_NP), "Mean"]
+    df_avg[4*i-2,"Gait_Speed"] <- f1[which(f1$Measure==GaitSpeedName_NP), "Mean"]
+    df_avg[4*i-2,"Stride_Length"] <- f1[which(f1$Measure==StrideLengthName_NP), "Mean"]
     
     # Day2
     if (s == "IMU"){
@@ -85,9 +117,19 @@ for (i in 1:nrow(df_side)){
       Swing <- f2[which(f2$Measure==SwingName), paste0("X",j)]
       GaitSpeed <- f2[which(f2$Measure==GaitSpeedName), paste0("X",j)]
       StrideLength <- f2[which(f2$Measure==StrideLengthName), paste0("X",j)]
-      row <- c(id,2,s,"Paretic",j,Stance,DoubleSupport,Swing,GaitSpeed,StrideLength)
+      row <- c(id,s,2,"Paretic",j,Stance,DoubleSupport,Swing,GaitSpeed,StrideLength)
       df[nrow(df)+1,] <- row
     }
+    
+    df_avg[4*i-1,"Partic_ID"] <- id
+    df_avg[4*i-1,"System"] <- s
+    df_avg[4*i-1,"Day"] <- 2
+    df_avg[4*i-1,"P_or_NP"] <- "Paretic"
+    df_avg[4*i-1,"Stance"] <- f2[which(f2$Measure==StanceName), "Mean"]
+    df_avg[4*i-1,"Double_Support"] <- f2[which(f2$Measure==DoubleSupportName), "Mean"]
+    df_avg[4*i-1,"Swing"] <- f2[which(f2$Measure==SwingName), "Mean"]
+    df_avg[4*i-1,"Gait_Speed"] <- f2[which(f2$Measure==GaitSpeedName), "Mean"]
+    df_avg[4*i-1,"Stride_Length"] <- f2[which(f2$Measure==StrideLengthName), "Mean"]
     
     # Non_Paretic
     for (j in 1:(ncol(f2)-3)){
@@ -96,9 +138,20 @@ for (i in 1:nrow(df_side)){
       Swing_NP <- f2[which(f2$Measure==SwingName_NP), paste0("X",j)]
       GaitSpeed_NP <- f2[which(f2$Measure==GaitSpeedName_NP), paste0("X",j)]
       StrideLength_NP <- f2[which(f2$Measure==StrideLengthName_NP), paste0("X",j)]
-      row <- c(id,2,s,"Non_Paretic",j,Stance_NP,DoubleSupport_NP,Swing_NP,GaitSpeed_NP,StrideLength_NP)
+      row <- c(id,s,2,"Non_Paretic",j,Stance_NP,DoubleSupport_NP,Swing_NP,GaitSpeed_NP,StrideLength_NP)
       df[nrow(df)+1,] <- row
     }
+    
+    df_avg[4*i,"Partic_ID"] <- id
+    df_avg[4*i,"System"] <- s
+    df_avg[4*i,"Day"] <- 2
+    df_avg[4*i,"P_or_NP"] <- "Non_Paretic"
+    df_avg[4*i,"Stance"] <- f2[which(f2$Measure==StanceName_NP), "Mean"]
+    df_avg[4*i,"Double_Support"] <- f2[which(f2$Measure==DoubleSupportName_NP), "Mean"]
+    df_avg[4*i,"Swing"] <- f2[which(f2$Measure==SwingName_NP), "Mean"]
+    df_avg[4*i,"Gait_Speed"] <- f2[which(f2$Measure==GaitSpeedName_NP), "Mean"]
+    df_avg[4*i,"Stride_Length"] <- f2[which(f2$Measure==StrideLengthName_NP), "Mean"]
 }
 
-write.csv(df, "IMUvsVicon.csv", row.names = F)
+write.csv(df, "data.csv", row.names = F)
+write.csv(df, "data_avg.csv", row.names = F)

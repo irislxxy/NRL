@@ -3,8 +3,8 @@ setwd("~/Desktop/NRL")
 
 # iWear
 iwear <- read.csv("iWear/iWear_complete_20191030.csv")
-df_score <- iwear[c("as_correct","hd_or_healthy","TMS","TFC", "Chorea_Subscore")]
-colnames(df_score)[5] <- c("Chorea")
+df_score <- iwear[c("as_correct","hd_or_healthy","bi_sex","age","TMS","TFC", "Chorea_Subscore")]
+colnames(df_score)[7] <- c("Chorea")
 
 # DTE
 dte <- read.csv("Dual Task/DTE_0322.csv") 
@@ -12,8 +12,8 @@ df_dte <- dte[,c("as_correct","motor_faeofs_dte","motor_fteofs_dte","motor_faeof
 colnames(df_dte) <- c("as_correct","FA","FT","FO")
 
 # APDM
-## siting 49 = 20GHI + 29TC (no IW5TCCO)
-sit <- read.csv("APDM/Sitting Postural Sway.csv", stringsAsFactors=FALSE)
+## siting
+sit <- read.csv("APDM/Sitting Postural Sway2.csv", stringsAsFactors=FALSE)
 sit$X[1:20] <- paste0("IW", substr(sit$X[1:20],3,4), "GHI")
 df_sit <- sit[c(1,12)]
 colnames(df_sit) <- c("as_correct","Jerk_Sit")
@@ -24,7 +24,7 @@ stand$X[1:20] <- paste0("IW", substr(stand$X[1:20],3,4), "GHI")
 df_stand <- stand[c(1,12)]
 colnames(df_stand) <- c("as_correct","Jerk_Stand")
 
-# merge 46 = 18GHI + 28TC (no IW5TCCO)
+# merge 55 = 18GHI + 29TC + 8WS
 df <- merge(df_score, df_dte, sort = F) 
 df <- merge(df, df_sit, sort = F) 
 df <- merge(df, df_stand, sort = F) 
@@ -33,7 +33,15 @@ df <- merge(df, df_stand, sort = F)
 table(df$TFC)
 df$Group <- ifelse(df$TFC<=10, "TFC <= 10", "TFC > 10")
 
-# Jerk of sitting postural sway with TMS 31 = 17GHI + 14TC (IW11TC/IW13GHI no TMS)
+# stat for 33 
+df_stat <- df[,c("as_correct","bi_sex","age","Chorea")] 
+df_stat <- na.omit(df_stat)   
+table(df_stat$bi_sex) # 1-Male 2-Female
+table(df_stat$age)
+mean(df_stat$age)
+sd(df_stat$age)
+
+# Jerk of sitting postural sway with TMS 39 = 17GHI + 14TC + 8WS (IW11TC/IW13GHI no TMS)
 temp <- df[,c("as_correct","Group","Jerk_Sit","TMS")] 
 temp <- na.omit(temp)                               
 cor.test(temp$Jerk_Sit, temp$TMS)
@@ -70,7 +78,7 @@ ggplot(temp, aes(x = Jerk_Sit, y = TMS)) +
                      labels=c("TFC 7-10   n = 18", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_sit_TMS_group.png")
 
-# Jerk of standing feet apart sway with TMS 31 = 17GHI + 14TC (IW11TC/IW13GHI no TMS)
+# Jerk of standing feet apart sway with TMS 39 = 17GHI + 14TC + 8WS (IW11TC/IW13GHI no TMS)
 temp <- df[,c("as_correct","Group","Jerk_Stand","TMS")] 
 temp <- na.omit(temp)                                 
 cor.test(temp$Jerk_Stand, temp$TMS)
@@ -96,7 +104,7 @@ ggplot(temp, aes(x = Jerk_Stand, y = TMS)) +
                      labels=c("TFC 7-10   n = 18", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_stand_TMS_group.png")
 
-# Jerk of sitting postural sway with TFC 33 = 18GHI + 15TC
+# Jerk of sitting postural sway with TFC 41 = 18GHI + 15TC + 8WS
 temp <- df[,c("as_correct","Group","Jerk_Sit","TFC")] 
 temp <- na.omit(temp)                                 
 cor.test(temp$Jerk_Sit, temp$TFC)
@@ -133,7 +141,7 @@ ggplot(temp, aes(x = Jerk_Sit, y = TFC)) +
                      labels=c("TFC 7-10 n = 20", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_sit_TFC_group.png")
 
-# Jerk of standing feet apart with TFC 33 = 18GHI + 15TC
+# Jerk of standing feet apart with TFC 41 = 18GHI + 15TC + 8WS
 temp <- df[,c("as_correct","Group","Jerk_Stand","TFC")] 
 temp <- na.omit(temp)                                   
 cor.test(temp$Jerk_Stand, temp$TFC)
@@ -159,7 +167,7 @@ ggplot(temp, aes(x = Jerk_Stand, y = TFC)) +
                      labels=c("TFC 7-10   n = 20", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_stand_TFC_group.png")
 
-# Jerk of sitting postural sway with chorea subscore 33 = 18GHI + 15TC
+# Jerk of sitting postural sway with chorea subscore 41 = 18GHI + 15TC + 8WS
 temp <- df[,c("as_correct","Group","Jerk_Sit","Chorea")] 
 temp <- na.omit(temp)                                   
 cor.test(temp$Jerk_Sit, temp$Chorea)
@@ -182,7 +190,7 @@ cor.test(temp[which(temp$Group == "TFC > 10"),"Jerk_Sit"], temp[which(temp$Group
 
 ggplot(temp, aes(x = Jerk_Sit, y = Chorea)) +
   geom_point(aes(color = Group)) +
-  geom_smooth(method = "lm", color = "#21618C") +
+  geom_smooth(method = "lm", color = "#196F3D") +
   geom_smooth(aes(color = Group), method = "lm") +
   annotate(geom = "text", 
            label = "Total r = 0.4759411 \n TFC 7-10 r = 0.434611 \n TFC 11-13 r = 0.7324569 ", 
@@ -191,12 +199,12 @@ ggplot(temp, aes(x = Jerk_Sit, y = Chorea)) +
   theme_bw() +
   theme(plot.title = element_text(hjust=0.5)) +
   theme(plot.subtitle = element_text(hjust=0.5)) +
-  scale_color_manual(values=c("#388E3C","#AED581"),
+  scale_color_manual(values=c("#AED6F1","#2874A6"),
                      name="Group",
                      labels=c("TFC 7-10   n = 20", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_sit_chorea_group.png")
 
-# Jerk of standing feet apart with chorea subscore 33 = 18GHI + 15TC
+# Jerk of standing feet apart with chorea subscore 41 = 18GHI + 15TC + 8WS
 temp <- df[,c("as_correct","Group","Jerk_Stand","Chorea")] 
 temp <- na.omit(temp)                                     
 cor.test(temp$Jerk_Stand, temp$Chorea)
@@ -223,7 +231,7 @@ cor.test(temp[which(temp$Group == "TFC > 10"),"Jerk_Stand"], temp[which(temp$Gro
 
 ggplot(temp, aes(x = Jerk_Stand, y = Chorea)) +
   geom_point(aes(color = Group)) +
-  geom_smooth(method = "lm", color = "#21618C") +
+  geom_smooth(method = "lm", color = "#196F3D") +
   geom_smooth(aes(color = Group), method = "lm") +
   annotate(geom = "text", 
            label = "Total r = 0.3912809 \n TFC 7-10 r = 0.3805717 \n TFC 11-13 r = 0.2987416 ", 
@@ -232,7 +240,7 @@ ggplot(temp, aes(x = Jerk_Stand, y = Chorea)) +
   theme_bw() +
   theme(plot.title = element_text(hjust=0.5)) +
   theme(plot.subtitle = element_text(hjust=0.5)) +
-  scale_color_manual(values=c("#388E3C","#AED581"),
+  scale_color_manual(values=c("#AED6F1","#2874A6"),
                      name="Group",
                      labels=c("TFC 7-10   n = 20", "TFC 11-13 n = 13"))
 ggsave("iWear/Correlation/jerk_stand_chorea_group.png")

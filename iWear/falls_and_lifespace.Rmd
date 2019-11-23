@@ -13,11 +13,25 @@ library(ggplot2)
 library(car)
 library(MASS)
 library(leaps)
-df <- read.csv("iWear_complete_0625.csv")
+
+iwear <- read.csv("iWear_complete_20191030.csv")
+sway <- read.csv("../APDM/Sitting Postural Sway2.csv", header=T, stringsAsFactors=FALSE)[,c(1,30)]
+colnames(sway) <- c("as_correct", "total_sway_area")
+sway$as_correct[1:20] <- paste0("IW",substr(sway$as_correct[1:20],3,4),"GHI")
+df <- merge(iwear, sway, all.x = T)
 fields <- colnames(df)
+
+# exclude controls
+df <- df[which(df$hd_or_healthy == 1),] # 42 participants = 18 GHI + 15 TC + 8 WS + 1 TA
+
+# check missing values
+df_na <- df[,c("as_correct","ls_score","TMS")] 
+df_na2 <- na.omit(df_na)  
 ```
 
 # 1. Falls - Descriptive Analysis (History of Falls Questionnaire)
+In this part, we include 42 participants, 18 from GHI, 15 from TC, 8 from WS and 1 from TA.
+
 ## Number of fallers (hfq_2)
 ```{r}
 # grep("hfq_2",fields) # 83
@@ -32,8 +46,9 @@ summary(df$hfq_2_yes)
 ## Description of most common activity at the time of fall (hfq_3, frequency distribution)
 ```{r}
 # table(df$hfq_3)
-df_hfq_3 <- data.frame(c(1,14,1,2,2,1,8),
-                       row.names = c("running","walking","standing",
+df_hfq_3 <- data.frame(c(11,1,2,2,1,7),
+                       row.names = c("walking",
+                                     "standing",
                                      "getting in/out of bed, chair wheelchair, car",
                                      "climbing on/off chair, stool, ladder",
                                      "participating in sports/exercising, dancing/riding a bicycle",
@@ -62,7 +77,7 @@ kable(df_hfq_4)
 ## Location of fall (hfq_5, frequency distribution)
 ```{r}
 # table(df$hfq_5)
-df_hfq_5 <- data.frame(c(15,2,12),
+df_hfq_5 <- data.frame(c(14,2,8),
                        row.names = c("inside home","inside another building","outside"))
 colnames(df_hfq_5) <- "frequency"
 kable(df_hfq_5)
@@ -120,7 +135,7 @@ summary(df$hfq_13_yes)
 ## Most serious injury after fall (hfq_15a, frequency distribution)
 ```{r}
 # table(df$hfq_15a)
-df_hfq_15a <- data.frame(c(4,12,1,2),
+df_hfq_15a <- data.frame(c(3,9,1,2),
                          row.names = c("cut, laceration",
                                        "bruise or hematoma",
                                        "sprain or strain",
@@ -132,97 +147,124 @@ kable(df_hfq_15a)
 ## Location of most serious injury (hfq_15b, frequency distribution)
 ```{r}
 # table(df$hfq_15b)
-df_hfq_15b <- data.frame(c(5,1,1,3,1,1,1,1,1,1,1),
+df_hfq_15b <- data.frame(c(4,1,1,2,1,1,1,1,1),
                          row.names = c("head", "face", "upper arm",
-                                       "elbow", "lower arm", "hand","back",
-                                       "knee", "lower leg", "ankle",
-                                       "other"))
+                                       "elbow", "lower arm", "back",
+                                       "knee", "lower leg", "ankle"))
 colnames(df_hfq_15b) <- "frequency"
 kable(df_hfq_15b)
 ```
 
 # 2. Falls - Association with Motor and Cognitive Function
+In this part, we only include 24 participants who have fallen in the past six months.
+
 ## Correlation of number of falls with UHDRS total motor score (TMS)
+We exclude IW11TC and IW13GHI since they do not have TMS.
 ```{r}
-temp <- df[,c("hfq_2_yes","TMS")]
+temp <- df[,c("as_correct","hfq_2_yes","TMS")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = TMS)) +
   labs(title = "Correlation of number of falls with TMS",
-       subtitle = cor(temp$hfq_2_yes, temp$TMS))
+       subtitle = cor(temp$hfq_2_yes, temp$TMS)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of number of falls with UHDRS cognitive (sdm_correct, sdm_errors)
 ```{r}
 # sdm_correct
-temp <- df[,c("hfq_2_yes","sdm_correct")]
+temp <- df[,c("as_correct","hfq_2_yes","sdm_correct")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = sdm_correct)) +
   labs(title = "Correlation of number of falls with sdm_correct",
-       subtitle = cor(temp$hfq_2_yes, temp$sdm_correct))
+       subtitle = cor(temp$hfq_2_yes, temp$sdm_correct)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # sdm_errors
-temp <- df[,c("hfq_2_yes","sdm_errors")]
+temp <- df[,c("as_correct","hfq_2_yes","sdm_errors")]
 temp <- na.omit(temp) 
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = sdm_errors)) +
   labs(title = "Correlation of number of falls with sdm_errors",
-       subtitle = cor(temp$hfq_2_yes, temp$sdm_errors))
+       subtitle = cor(temp$hfq_2_yes, temp$sdm_errors)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 # 3. Falls - Association with Physical Activity
+In this part, we only include 24 participants who have fallen in the past six months.
+
 ## Correlation of number of falls with percentage of sedentary time
+We exclude 8 participants since they do not have sed_perc. 
 ```{r}
 temp <- df[,c("as_correct","hfq_2_yes","sed_perc")]
+temp <- temp[!is.na(temp$hfq_2_yes),]
+temp$as_correct[is.na(temp$sed_perc)]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = hfq_2_yes, y = sed_perc, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of number of falls with percentage of sedentary time",
-       subtitle = cor(temp$hfq_2_yes, temp$sed_perc))
+       subtitle = cor(temp$hfq_2_yes, temp$sed_perc)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # significance level
 cor.test(temp$hfq_2_yes, temp$sed_perc)
 ```
-The p-value is 0.5327, which is larger than the significance level 0.05. We can conclude that number of falls and percentage of sedentary time are not significantly correlated.
+The p-value is 0.7175, which is larger than the significance level 0.05. We can conclude that number of falls and percentage of sedentary time are not significantly correlated.
 
 ## Correlation of number of falls with total sway area 
 ```{r}
-df_sway <- read.csv("../APDM/Sitting Postural Sway.csv", header=T, stringsAsFactors=FALSE)[,c(1,30)]
-colnames(df_sway) <- c("as_correct", "total_sway_area")
-df_sway$as_correct[1:20] <- paste0("IW",substr(df_sway$as_correct[1:20],3,4),"GHI")
-df <- merge(df, df_sway, all.x = T)
+temp <- df[,c("as_correct" ,"hfq_2_yes", "total_sway_area")]
+temp <- na.omit(temp)
+cat("num of participants:", nrow(temp), "\n")
 
-temp <- df[,c("hfq_2_yes", "total_sway_area")]
-temp <- na.omit(temp) # n = 19
 ggplot(temp) +
   geom_point(aes(x = hfq_2_yes, y = total_sway_area)) +
   labs(title = "Correlation of number of falls with total sway area",
-       subtitle = cor(temp$hfq_2_yes, temp$total_sway_area))
+       subtitle = cor(temp$hfq_2_yes, temp$total_sway_area)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # significance level
 cor.test(temp$hfq_2_yes, temp$total_sway_area)
 ```
-The p-value is 0.188, which is larger than the significance level 0.05. We can conclude that number of falls and total sway area are not significantly correlated.
+The p-value is 0.9788, which is larger than the significance level 0.05. We can conclude that number of falls and total sway area are not significantly correlated.
 
 # 4. Falls - Regression
+In this part, we include 15 participants.
 ```{r}
-lm_falls <- lm(hfq_2_yes ~ TMS + sdm_correct + total_sway_area + Avg_Daily_StepCount, data = df)
+temp <- df[,c("as_correct","hfq_2_yes","TMS", "sdm_correct", "total_sway_area", "Avg_Daily_StepCount")]
+temp <- temp[!is.na(temp$hfq_2_yes),]
+temp <- na.omit(temp)
+cat("num of participants:", nrow(temp), "\n")
+
+lm_falls <- lm(hfq_2_yes ~ TMS + sdm_correct + total_sway_area + Avg_Daily_StepCount, data = temp)
 summary(lm_falls)
 
 # multicollinearity
 vif(lm_falls)
-temp <- df[,c("TMS", "sdm_correct")]
-cor.test(temp$TMS, temp$sdm_correct)
 
 # stepwise selection
 step.lm_falls <- stepAIC(lm_falls, direction = "both", trace = FALSE)
 summary(step.lm_falls)
 
 # best subset selection
-temp <- df[,c("hfq_2_yes","TMS", "sdm_correct", "total_sway_area", "Avg_Daily_StepCount")]
-temp <- na.omit(temp) # n = 11
 regsubsetsObj <- regsubsets(x=temp[,c("TMS", "sdm_correct", "total_sway_area", "Avg_Daily_StepCount")],
                             y=temp$hfq_2_yes, nbest = 2, really.big = T)
 plot(regsubsetsObj, scale = "adjr2")  
@@ -232,6 +274,7 @@ cor.test(temp$hfq_2_yes, temp$total_sway_area) # significantly correlated
 ```
 
 # 5. Lifespace - Frequency Distribution
+In this part, we include 24 participants, 15 from TC, 8 from WS and 1 from TA.
 ```{r}
 df_ls <- data.frame(table(df$ls_score))
 colnames(df_ls) <- c("ls","frequency")
@@ -239,135 +282,214 @@ kable(df_ls)
 ```
 
 # 6. Lifespace - Association with Disease Severity
+In this part, we include 24 participants, 15 from TC, 8 from WS and 1 from TA.
+
 ## Correlation of lifespace score with UHDRS total motor score (TMS)
+We exclude IW11TC since he does not have TMS.
 ```{r}
 temp <- df[,c("ls_score","TMS")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = TMS)) +
   labs(title = "Correlation of lifespace score with TMS",
-       subtitle = cor(temp$ls_score, temp$TMS))
+       subtitle = cor(temp$ls_score, temp$TMS)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 # 7. Lifespace- Association with Balance and Physical Activity
+In this part, we include 24 participants, 15 from TC, 8 from WS and 1 from TA.
+
 ## Correlation of lifespace score with balance subscore
 ```{r}
 temp <- df[,c("ls_score","Balance_Subscore")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = Balance_Subscore)) +
   labs(title = "Correlation of lifespace score with balance subscore",
-       subtitle = cor(temp$ls_score, temp$Balance_Subscore))
+       subtitle = cor(temp$ls_score, temp$Balance_Subscore)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of lifespace score with self-reported physical activity (ipaq_score_post)
+We exclude IW11TC since he does not have ipaq_score_post.
 ```{r}
 temp <- df[,c("ls_score","ipaq_score_post")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = ipaq_score_post)) +
   labs(title = "Correlation of lifespace score with self-reported physical activity",
-       subtitle = cor(temp$ls_score, temp$ipaq_score_post))
+       subtitle = cor(temp$ls_score, temp$ipaq_score_post)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of lifespace score with actual physical activity average step counts
+We exclude 5 participants since they do not have average step counts.
 ```{r}
 temp <- df[,c("as_correct","ls_score","Avg_Daily_StepCount")]
+temp <- temp[!is.na(temp$ls_score),]
+temp$as_correct[is.na(temp$Avg_Daily_StepCount)]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = ls_score, y = Avg_Daily_StepCount, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with with average step counts",
-       subtitle = cor(temp$ls_score, temp$Avg_Daily_StepCount))
+       subtitle = cor(temp$ls_score, temp$Avg_Daily_StepCount)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of lifespace score with percentage of sedentary time
+We exclude 5 participants since they do not have average step counts.
 ```{r}
 temp <- df[,c("as_correct","ls_score","sed_perc")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = ls_score, y = sed_perc, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with percentage of sedentary time",
-       subtitle = cor(temp$ls_score, temp$sed_perc))
+       subtitle = cor(temp$ls_score, temp$sed_perc)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # significance level
 cor.test(temp$ls_score, temp$sed_perc)
 ```
-The p-value is 0.6873, which is larger than the significance level 0.05. We can conclude that number of falls and total sway area are not significantly correlated.
+The p-value is 0.6677, which is larger than the significance level 0.05. We can conclude that lifespace score and percentage of sedentary time are not significantly correlated.
+
 
 ## Correlation of lifespace score with total sway area
+We exclude IW7TA since he does not have total sway area.
 ```{r}
-temp <- df[,c("ls_score","total_sway_area")]
+temp <- df[,c("as_correct","ls_score","total_sway_area")]
 temp <- na.omit(temp)
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = total_sway_area)) +
   labs(title = "Correlation of lifespace score with total sway area",
-       subtitle = cor(temp$ls_score, temp$total_sway_area))
+       subtitle = cor(temp$ls_score, temp$total_sway_area)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # significance level
 cor.test(temp$ls_score, temp$total_sway_area)
 ```
-The p-value is 0.005826, which is less than the significance level 0.05. We can conclude that lifespace score and total sway area are significantly correlated with a correlation coefficient of -0.67.
+The p-value is 0.1661, which is larger than the significance level 0.05. We can conclude that lifespace score and total sway area are not significantly correlated.
 
 # 8. Lifespace - Association with Cognitive and Behavioral Function
+In this part, we include 24 participants, 15 from TC, 8 from WS and 1 from TA.
+
 ## Correlation of lifespace score with Symbol Digit Modality Test correct score 
+We exclude IW7TA since he does not have sdm_correct.
 ```{r}
-temp <- df[,c("ls_score","sdm_correct")]
+temp <- df[,c("as_correct","ls_score","sdm_correct")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = sdm_correct)) +
   labs(title = "Correlation of lifespace score with sdm_correct",
-       subtitle = cor(temp$ls_score, temp$sdm_correct))
+       subtitle = cor(temp$ls_score, temp$sdm_correct)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of lifespace score with Symbol Digit Modality Test error score
+We exclude IW7TA since he does not have sdm_errors.
 ```{r}
 temp <- df[,c("ls_score","sdm_errors")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = sdm_errors)) +
   labs(title = "Correlation of lifespace score with sdm_errors",
-       subtitle = cor(temp$ls_score, temp$sdm_errors))
+       subtitle = cor(temp$ls_score, temp$sdm_errors)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
         
 ## Correlation of lifespace score  with Verbal Fluency Test score
 ```{r}
 temp <- df[,c("as_correct","ls_score","vf_subtotal")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = ls_score, y = vf_subtotal, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with vf_subtotal",
-       subtitle = cor(temp$ls_score, temp$vf_subtotal))
+       subtitle = cor(temp$ls_score, temp$vf_subtotal)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 # 9. Lifespace - Association with Functional Limitations
+In this part, we include 24 participants, 15 from TC, 8 from WS and 1 from TA.
+
 ## Correlation of lifespace score with Total Functional Capacity score (TFC)
 ```{r}
 temp <- df[,c("as_correct","ls_score","TFC")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = ls_score, y = TFC, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with TFC",
-       subtitle = cor(temp$ls_score, temp$TFC))
+       subtitle = cor(temp$ls_score, temp$TFC)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 ## Correlation of lifespace score with Functional Assessment (FA)
+We exclude IW1TC and IW11TC since they do not have FA.
 ```{r}
 temp <- df[,c("as_correct","ls_score","FA")]
 temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp, aes(x = ls_score, y = FA, label = as_correct)) +
   geom_point() +
   geom_text(aes(label = as_correct), size = 2, hjust = 0, vjust = 0) +
   labs(title = "Correlation of lifespace score with FA",
-       subtitle = cor(temp$ls_score, temp$FA))
+       subtitle = cor(temp$ls_score, temp$FA)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 ```
 
 # 10. Lifespace - Regression
+In this part, we include 22 participants.
 ```{r}
-lm_ls <- lm(ls_score ~ sdm_correct + TMS + total_sway_area, data = df)
+temp <- df[,c("as_correct","ls_score", "sdm_correct", "TMS", "total_sway_area")] 
+temp <- na.omit(temp) 
+cat("num of participants:", nrow(temp), "\n")
+
+lm_ls <- lm(ls_score ~ sdm_correct + TMS + total_sway_area, data = temp)
 summary(lm_ls)
 
 # multicollinearity
@@ -378,8 +500,6 @@ step.lm_ls <- stepAIC(lm_ls, direction = "both", trace = FALSE)
 summary(step.lm_ls)
 
 # best subset selection
-temp <- df[,c("ls_score","TMS", "sdm_correct", "total_sway_area")]
-temp <- na.omit(temp) # n = 14
 regsubsetsObj <- regsubsets(x=temp[,c("TMS", "sdm_correct", "total_sway_area")],
                             y=temp$ls_score, nbest = 2, really.big = T)
 plot(regsubsetsObj, scale = "adjr2")  
@@ -389,15 +509,21 @@ cor.test(temp$ls_score, temp$total_sway_area) # significantly correlated
 ```
 
 # 11. Correlation of Lifespace with Falls
+In this part, we include 16 participants. 24 participants have lifespace score, but 8 out of 24 have not fallen in the past six months.
 ```{r}
-temp <- df[,c("ls_score","hfq_2_yes")]
+temp <- df[,c("as_correct","ls_score","hfq_2_yes")]
 temp <- na.omit(temp)
+cat("num of participants:", nrow(temp), "\n")
+
 ggplot(temp) +
   geom_point(aes(x = ls_score, y = hfq_2_yes)) +
   labs(title = "Correlation of lifespace score with number of falls",
-       subtitle = cor(temp$ls_score, temp$hfq_2_yes))
+       subtitle = cor(temp$ls_score, temp$hfq_2_yes)) +
+  theme_bw() +
+  theme(plot.title = element_text(hjust=0.5)) +
+  theme(plot.subtitle = element_text(hjust=0.5))
 
 # significance level
 cor.test(temp$ls_score, temp$hfq_2_yes)
 ```
-The p-value is 0.2996, which is larger than the significance level 0.05. We can conclude that lifespace score and number of falls are not significantly correlated.
+The p-value is 0.1922, which is larger than the significance level 0.05. We can conclude that lifespace score and number of falls are not significantly correlated.
